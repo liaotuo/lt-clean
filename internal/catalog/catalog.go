@@ -7,7 +7,7 @@ import (
 	"github.com/liaotuo/lt-clean/internal/sysutil"
 )
 
-// Build returns the full catalog of cleanable items (28 entries).
+// Build returns the full catalog of cleanable items (29 entries).
 //
 // Mirrors the Rust build_catalog() in lt-tool/src/cleaner.rs.
 func Build() []Item {
@@ -162,6 +162,12 @@ func Build() []Item {
 			SizePaths: []string{filepath.Join(home, ".cache")},
 			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".cache")}},
 			Probe:     probePaths,
+		},
+		{
+			ID: "docker", Group: "dev_caches", Title: "Docker 镜像/构建缓存", Level: Costly,
+			SizePaths: nil,
+			Action:    Action{Kind: ActCmd, Program: "docker", Args: []string{"system", "prune", "-a", "-f"}},
+			Probe:     probeCmd("docker"),
 		},
 
 		// ── ide ────────────────────────────────────────────────────────────

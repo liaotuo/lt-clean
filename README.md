@@ -100,7 +100,7 @@ lt-clean clean --safe
 | dev_caches  | maven                  | Costly      |   ✓    | Maven                 |
 | dev_caches  | cocoapods              | Costly      |   ✓    | CocoaPods 仓库        |
 | dev_caches  | xdg_cache              | Costly      |   ✓    | XDG 缓存              |
-| dev_caches  | docker                 | Costly      |   ○    | Docker 镜像/卷/构建缓存 |
+| dev_caches  | docker                 | Costly      |   ✓    | Docker 镜像/构建缓存  |
 | dev_caches  | deno                   | Safe        |   ○    | Deno cache            |
 | dev_caches  | bazel                  | Safe        |   ○    | Bazel disk cache      |
 | dev_caches  | flutter_pub            | Costly      |   ○    | Flutter pub-cache     |
@@ -121,7 +121,7 @@ lt-clean clean --safe
 | system      | trash                  | Destructive |   ✓    | 回收站                |
 | system      | ds_store               | Safe        |   ✓    | .DS_Store 递归扫除    |
 
-Currently 28 implemented / 9 planned.
+Currently 29 implemented / 8 planned.
 
 ### Safety levels
 

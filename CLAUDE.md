@@ -16,7 +16,7 @@ make fmt vet            # gofmt + go vet
 make tidy               # go mod tidy
 
 # Run a single test
-go test ./internal/catalog -run TestBuildHas28Items
+go test ./internal/catalog -run TestBuildHas29Items
 go test ./internal/cleaner -run TestExecuteRmGlobInDir -v
 
 # Run the TUI directly
@@ -42,7 +42,7 @@ main.go ─► cmd/ (cobra)
               └─ version.go
 
 internal/
-  catalog/   28 hard-coded Items with Probe/Action/SafetyLevel
+  catalog/   29 hard-coded Items with Probe/Action/SafetyLevel
   scanner/   concurrent du-style sizing (8 workers, 120s/item timeout)
   cleaner/   serial action execution + before/after diff for "freed"
   sysutil/   home dir + PATH lookup helpers
@@ -59,7 +59,7 @@ internal/
 - **`Action`** — one of five kinds: `ActRmDir`, `ActRmGlobInDir`, `ActCmd`, `ActMultiPath`, `ActDsStoreSweep`. See the field-usage comment on `Action`.
 - **`Probe`** — gates availability per machine. Common probes: `probePaths` (any `SizePaths` exists), `probeCmd(name)` (binary on PATH), `probeAlways`. The TUI and `scan` filter to `Available()` items before scanning.
 
-Two tests pin the expected catalog: `TestBuildHas28Items` and `TestBuildHasAllExpectedIDs`. **Adding or removing an item requires updating both.**
+Two tests pin the expected catalog: `TestBuildHas29Items` and `TestBuildHasAllExpectedIDs`. **Adding or removing an item requires updating both.**
 
 ### Scanner (`internal/scanner`)
 
