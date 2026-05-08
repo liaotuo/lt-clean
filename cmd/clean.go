@@ -35,7 +35,7 @@ var cleanCmd = &cobra.Command{
 		}
 
 		fmt.Printf("cleaning %d items%s:\n", len(ids), dryRunSuffix(cleanDryRun))
-		summary := cleaner.Run(items, ids, cleanDryRun, func(p cleaner.Progress) {
+		summary := cleaner.Run(items, ids, cleaner.ModePermanent, cleanDryRun, func(p cleaner.Progress) {
 			switch p.Status {
 			case "ok":
 				fmt.Printf("  ✓ %-32s  freed %s\n", p.ID, humanize.Bytes(uint64(p.FreedBytes)))

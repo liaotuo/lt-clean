@@ -11,7 +11,7 @@ import (
 func TestExecuteRmDirNonexistentIsOk(t *testing.T) {
 	tmp := t.TempDir()
 	missing := filepath.Join(tmp, "does-not-exist")
-	if err := Execute(&catalog.Action{Kind: catalog.ActRmDir, Paths: []string{missing}}); err != nil {
+	if err := Execute(&catalog.Action{Kind: catalog.ActRmDir, Paths: []string{missing}}, ModePermanent); err != nil {
 		t.Errorf("RmDir on missing path should be no-op, got %v", err)
 	}
 }
@@ -25,7 +25,7 @@ func TestExecuteRmDirRemovesNested(t *testing.T) {
 	mustMkdir(t, sub)
 	mustWrite(t, filepath.Join(sub, "leaf.txt"), "y")
 
-	err := Execute(&catalog.Action{Kind: catalog.ActRmDir, Paths: []string{parent}})
+	err := Execute(&catalog.Action{Kind: catalog.ActRmDir, Paths: []string{parent}}, ModePermanent)
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestExecuteRmGlobInDir(t *testing.T) {
 		Kind: catalog.ActRmGlobInDir,
 		Dir:  tmp,
 		Exts: []string{"gz", "bz2"},
-	})
+	}, ModePermanent)
 	if err != nil {
 		t.Fatalf("Execute returned error: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestExecuteRmGlobInDirNonexistentIsOk(t *testing.T) {
 		Kind: catalog.ActRmGlobInDir,
 		Dir:  filepath.Join(tmp, "missing"),
 		Exts: []string{"gz"},
-	})
+	}, ModePermanent)
 	if err != nil {
 		t.Errorf("RmGlobInDir on missing dir should be no-op, got %v", err)
 	}
@@ -77,7 +77,7 @@ func TestExecuteDsStoreSweep(t *testing.T) {
 	tmp := t.TempDir()
 	target := filepath.Join(tmp, ".DS_Store")
 	mustWrite(t, target, "x")
-	err := Execute(&catalog.Action{Kind: catalog.ActDsStoreSweep, Paths: []string{tmp}})
+	err := Execute(&catalog.Action{Kind: catalog.ActDsStoreSweep, Paths: []string{tmp}}, ModePermanent)
 	if err != nil {
 		t.Fatalf("DsStoreSweep returned error: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestExecuteDsStoreSweep(t *testing.T) {
 
 func TestExecuteDsStoreSweepEmptyDirIsOk(t *testing.T) {
 	tmp := t.TempDir()
-	err := Execute(&catalog.Action{Kind: catalog.ActDsStoreSweep, Paths: []string{tmp}})
+	err := Execute(&catalog.Action{Kind: catalog.ActDsStoreSweep, Paths: []string{tmp}}, ModePermanent)
 	if err != nil {
 		t.Errorf("DsStoreSweep on empty dir should succeed, got %v", err)
 	}
@@ -99,7 +99,7 @@ func TestRunDryRunEmitsDryrun(t *testing.T) {
 		{ID: "x", Group: "g", Title: "X", Action: catalog.Action{Kind: catalog.ActRmDir, Paths: []string{"/tmp/nonexistent"}}},
 	}
 	var got []Progress
-	summary := Run(items, []string{"x"}, true, func(p Progress) { got = append(got, p) })
+	summary := Run(items, []string{"x"}, ModePermanent, true, func(p Progress) { got = append(got, p) })
 	if len(got) != 1 || got[0].Status != "dryrun" {
 		t.Errorf("expected one dryrun progress, got %+v", got)
 	}
@@ -110,7 +110,7 @@ func TestRunDryRunEmitsDryrun(t *testing.T) {
 
 func TestRunUnknownIDIsError(t *testing.T) {
 	items := []catalog.Item{}
-	summary := Run(items, []string{"nonexistent"}, false, nil)
+	summary := Run(items, []string{"nonexistent"}, ModePermanent, false, nil)
 	if summary.FailCount != 1 || summary.SuccessCount != 0 {
 		t.Errorf("expected fail=1 success=0, got %+v", summary)
 	}
@@ -130,5 +130,94 @@ func mustWrite(t *testing.T, path, body string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 		t.Fatalf("write %s: %v", path, err)
+	}
+}
+
+func TestRunTrashModeMovesToTrash(t *testing.T) {
+	home := withTempHome(t)
+
+	src := filepath.Join(home, "cache")
+	mustMkdir(t, src)
+	mustWrite(t, filepath.Join(src, "blob"), "x")
+
+	items := []catalog.Item{
+		{ID: "x", Group: "g", Title: "X",
+			SizePaths: []string{src},
+			Action:    catalog.Action{Kind: catalog.ActRmDir, Paths: []string{src}}},
+	}
+
+	summary := Run(items, []string{"x"}, ModeTrash, false, nil)
+	if summary.SuccessCount != 1 {
+		t.Fatalf("expected success=1, got %+v", summary)
+	}
+	if _, err := os.Stat(src); !os.IsNotExist(err) {
+		t.Errorf("source should be gone, stat err=%v", err)
+	}
+	entries, err := os.ReadDir(filepath.Join(home, ".Trash"))
+	if err != nil {
+		t.Fatalf("reading .Trash: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Errorf("expected 1 entry in .Trash, got %d", len(entries))
+	}
+}
+
+func TestRunPermanentModeReallyDeletes(t *testing.T) {
+	home := withTempHome(t)
+
+	src := filepath.Join(home, "cache")
+	mustMkdir(t, src)
+
+	items := []catalog.Item{
+		{ID: "x", Group: "g", Title: "X",
+			SizePaths: []string{src},
+			Action:    catalog.Action{Kind: catalog.ActRmDir, Paths: []string{src}}},
+	}
+
+	Run(items, []string{"x"}, ModePermanent, false, nil)
+
+	if _, err := os.Stat(src); !os.IsNotExist(err) {
+		t.Errorf("source should be gone, stat err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".Trash")); !os.IsNotExist(err) {
+		t.Errorf(".Trash should not have been created in permanent mode, stat err=%v", err)
+	}
+}
+
+func TestRunTrashItemForcesPermanent(t *testing.T) {
+	home := withTempHome(t)
+
+	trashDir := filepath.Join(home, ".Trash")
+	mustMkdir(t, trashDir)
+	mustWrite(t, filepath.Join(trashDir, "junk"), "x")
+
+	items := []catalog.Item{
+		{ID: "trash", Group: "system", Title: "回收站",
+			Level:     catalog.Destructive,
+			SizePaths: []string{trashDir},
+			Action:    catalog.Action{Kind: catalog.ActRmDir, Paths: []string{trashDir}}},
+	}
+
+	// Even though caller asks for ModeTrash, the trash item must be deleted permanently.
+	summary := Run(items, []string{"trash"}, ModeTrash, false, nil)
+	if summary.SuccessCount != 1 {
+		t.Fatalf("expected success=1, got %+v", summary)
+	}
+	if _, err := os.Stat(trashDir); !os.IsNotExist(err) {
+		t.Errorf(".Trash should be gone (rm), got stat err=%v", err)
+	}
+}
+
+func TestExecuteDsStoreSweepIgnoresMode(t *testing.T) {
+	tmp := t.TempDir()
+	target := filepath.Join(tmp, ".DS_Store")
+	mustWrite(t, target, "x")
+
+	// In trash mode, DsStoreSweep should still permanent-delete (find -delete).
+	if err := Execute(&catalog.Action{Kind: catalog.ActDsStoreSweep, Paths: []string{tmp}}, ModeTrash); err != nil {
+		t.Fatalf("DsStoreSweep err=%v", err)
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Errorf(".DS_Store should be gone")
 	}
 }

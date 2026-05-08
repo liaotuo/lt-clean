@@ -182,7 +182,7 @@ func (m Model) beginClean() (tea.Model, tea.Cmd) {
 	doneCh := m.doneCh
 
 	go func() {
-		summary := cleaner.Run(items, ids, dryRun, func(p cleaner.Progress) {
+		summary := cleaner.Run(items, ids, cleaner.ModePermanent, dryRun, func(p cleaner.Progress) {
 			progCh <- p
 		})
 		close(progCh)
