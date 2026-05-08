@@ -16,7 +16,7 @@ import (
 )
 
 var scanJSON bool
-var scanAll  bool
+var scanAll bool
 
 var scanCmd = &cobra.Command{
 	Use:   "scan",

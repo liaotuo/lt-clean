@@ -7,8 +7,8 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/liaotuo/lt-clean/internal/catalog"
-	"github.com/liaotuo/lt-clean/internal/config"
 	"github.com/liaotuo/lt-clean/internal/cleaner"
+	"github.com/liaotuo/lt-clean/internal/config"
 	"github.com/spf13/cobra"
 )
 
