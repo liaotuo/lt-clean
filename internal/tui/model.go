@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/liaotuo/lt-clean/internal/catalog"
 	"github.com/liaotuo/lt-clean/internal/cleaner"
 	"github.com/liaotuo/lt-clean/internal/scanner"
@@ -100,8 +100,6 @@ func groupOrder(g string) int {
 		return 2
 	case "system":
 		return 3
-	case "project":
-		return 4
 	}
 	return 99
 }

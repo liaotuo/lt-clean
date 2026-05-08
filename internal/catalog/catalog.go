@@ -7,17 +7,13 @@ import (
 	"github.com/liaotuo/lt-clean/internal/sysutil"
 )
 
-// Build returns the full catalog of cleanable items (31 entries).
+// Build returns the full catalog of cleanable items (28 entries).
 //
 // Mirrors the Rust build_catalog() in lt-tool/src/cleaner.rs.
 func Build() []Item {
 	home := sysutil.Home()
 	if home == "" {
 		home = "/Users/lt"
-	}
-	projectRoot, err := os.Getwd()
-	if err != nil {
-		projectRoot = "."
 	}
 
 	probePaths := func(item *Item) bool {
@@ -255,26 +251,6 @@ func Build() []Item {
 			SizePaths: []string{home},
 			Action:    Action{Kind: ActDsStoreSweep, Paths: []string{home}},
 			Probe:     probeAlways,
-		},
-
-		// ── project ───────────────────────────────────────────────────────
-		{
-			ID: "lt_target", Group: "project", Title: "LT Tool target/", Level: Costly,
-			SizePaths: []string{filepath.Join(projectRoot, "target")},
-			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(projectRoot, "target")}},
-			Probe:     probePaths,
-		},
-		{
-			ID: "lt_tmp", Group: "project", Title: "LT Tool tmp/", Level: Safe,
-			SizePaths: []string{filepath.Join(projectRoot, "tmp")},
-			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(projectRoot, "tmp")}},
-			Probe:     probePaths,
-		},
-		{
-			ID: "lt_logs", Group: "project", Title: "LT Tool logs/", Level: Safe,
-			SizePaths: []string{filepath.Join(projectRoot, "logs")},
-			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(projectRoot, "logs")}},
-			Probe:     probePaths,
 		},
 	}
 

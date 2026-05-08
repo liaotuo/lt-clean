@@ -2,10 +2,10 @@ package catalog
 
 import "testing"
 
-func TestBuildHas31Items(t *testing.T) {
+func TestBuildHas28Items(t *testing.T) {
 	items := Build()
-	if len(items) != 31 {
-		t.Fatalf("expected 31 catalog items, got %d", len(items))
+	if len(items) != 28 {
+		t.Fatalf("expected 28 catalog items, got %d", len(items))
 	}
 }
 
@@ -22,7 +22,7 @@ func TestBuildHasAllExpectedIDs(t *testing.T) {
 		"xcode_derived", "vscode_cache", "jetbrains_cache",
 		"ios_simulator_unavail", "ios_backup", "apfs_snapshots",
 		"user_logs", "system_logs_archived", "quicklook_cache",
-		"trash", "ds_store", "lt_target", "lt_tmp", "lt_logs",
+		"trash", "ds_store",
 	}
 	for _, id := range expected {
 		if !got[id] {

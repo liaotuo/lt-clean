@@ -115,7 +115,7 @@ func dryRunSuffix(dry bool) string {
 
 func init() {
 	cleanCmd.Flags().StringSliceVar(&cleanIDs, "id", nil, "comma-separated item ids (e.g. brew,go_modcache)")
-	cleanCmd.Flags().StringVar(&cleanGroup, "group", "", "select all items in a group (dev_caches|ide|mobile|system|project)")
+	cleanCmd.Flags().StringVar(&cleanGroup, "group", "", "select all items in a group (dev_caches|ide|mobile|system)")
 	cleanCmd.Flags().BoolVar(&cleanSafe, "safe", false, "select all Safe-level items")
 	cleanCmd.Flags().BoolVar(&cleanDryRun, "dry-run", false, "preview without deleting")
 	rootCmd.AddCommand(cleanCmd)

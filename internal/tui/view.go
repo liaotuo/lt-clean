@@ -170,8 +170,6 @@ func groupTitle(g string) string {
 		return "Mobile"
 	case "system":
 		return "System"
-	case "project":
-		return "Project"
 	}
 	return g
 }
