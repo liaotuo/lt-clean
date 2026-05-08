@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	cleanIDs    []string
-	cleanGroup  string
-	cleanSafe   bool
-	cleanDryRun bool
+	cleanIDs       []string
+	cleanGroup     string
+	cleanSafe      bool
+	cleanDryRun    bool
+	cleanPermanent bool
 )
 
 var cleanCmd = &cobra.Command{
@@ -39,11 +40,28 @@ var cleanCmd = &cobra.Command{
 			return errors.New("no items selected; pass --id, --group, or --safe")
 		}
 
-		fmt.Printf("cleaning %d items%s:\n", len(ids), dryRunSuffix(cleanDryRun))
-		summary := cleaner.Run(items, ids, cleaner.ModePermanent, cleanDryRun, func(p cleaner.Progress) {
+		mode := cleaner.ModeTrash
+		if cleanPermanent {
+			mode = cleaner.ModePermanent
+		}
+
+		actionWord := "trashed"
+		summaryWord := "trashed"
+		if cleanPermanent {
+			actionWord = "freed"
+			summaryWord = "freed"
+		}
+
+		modeTag := " [TRASH]"
+		if cleanPermanent {
+			modeTag = " [PERMANENT]"
+		}
+
+		fmt.Printf("cleaning %d items%s%s:\n", len(ids), dryRunSuffix(cleanDryRun), modeTag)
+		summary := cleaner.Run(items, ids, mode, cleanDryRun, func(p cleaner.Progress) {
 			switch p.Status {
 			case "ok":
-				fmt.Printf("  ✓ %-32s  freed %s\n", p.ID, humanize.Bytes(uint64(p.FreedBytes)))
+				fmt.Printf("  ✓ %-32s  %s %s\n", p.ID, actionWord, humanize.Bytes(uint64(p.FreedBytes)))
 			case "fail":
 				msg := ""
 				if p.Err != nil {
@@ -55,7 +73,8 @@ var cleanCmd = &cobra.Command{
 			}
 		})
 
-		fmt.Printf("\ntotal freed: %s   success: %d   failed: %d\n",
+		fmt.Printf("\ntotal %s: %s   success: %d   failed: %d\n",
+			summaryWord,
 			humanize.Bytes(uint64(summary.TotalFreed)),
 			summary.SuccessCount, summary.FailCount)
 		if summary.FailCount > 0 {
@@ -153,5 +172,6 @@ func init() {
 	cleanCmd.Flags().StringVar(&cleanGroup, "group", "", "select all items in a group (dev_caches|ide|mobile|system)")
 	cleanCmd.Flags().BoolVar(&cleanSafe, "safe", false, "select all Safe-level items")
 	cleanCmd.Flags().BoolVar(&cleanDryRun, "dry-run", false, "preview without deleting")
+	cleanCmd.Flags().BoolVar(&cleanPermanent, "permanent", false, "permanently delete instead of moving to ~/.Trash")
 	rootCmd.AddCommand(cleanCmd)
 }
