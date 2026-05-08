@@ -55,6 +55,7 @@ type Item struct {
 	ID        string
 	Group     string
 	Title     string
+	Hint      string // one-line plain-language description shown in TUI footer
 	Level     SafetyLevel
 	SizePaths []string
 	Action    Action

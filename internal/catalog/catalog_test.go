@@ -59,3 +59,11 @@ func TestItemAvailableNilProbe(t *testing.T) {
 		t.Errorf("Item with nil Probe should be Available")
 	}
 }
+
+func TestEveryItemHasHint(t *testing.T) {
+	for _, it := range Build() {
+		if it.Hint == "" {
+			t.Errorf("item %s has empty Hint", it.ID)
+		}
+	}
+}
