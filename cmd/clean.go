@@ -7,6 +7,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/liaotuo/lt-clean/internal/catalog"
+	"github.com/liaotuo/lt-clean/internal/config"
 	"github.com/liaotuo/lt-clean/internal/cleaner"
 	"github.com/spf13/cobra"
 )
@@ -25,8 +26,12 @@ var cleanCmd = &cobra.Command{
 		"At least one selector is required. Use --dry-run to preview without deleting.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		items := catalog.Build()
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
 
-		ids, err := resolveIDs(items, cleanIDs, cleanGroup, cleanSafe)
+		ids, err := resolveIDs(items, cleanIDs, cleanGroup, cleanSafe, cfg)
 		if err != nil {
 			return err
 		}
@@ -60,9 +65,10 @@ var cleanCmd = &cobra.Command{
 	},
 }
 
-func resolveIDs(items []catalog.Item, ids []string, group string, safeOnly bool) ([]string, error) {
+func resolveIDs(items []catalog.Item, ids []string, group string, safeOnly bool, cfg config.Config) ([]string, error) {
 	set := make(map[string]bool)
 
+	// --id is explicit user intent: never filtered by config.
 	for _, raw := range ids {
 		for _, id := range strings.Split(raw, ",") {
 			id = strings.TrimSpace(id)
@@ -76,13 +82,20 @@ func resolveIDs(items []catalog.Item, ids []string, group string, safeOnly bool)
 		}
 	}
 
+	var skipped []string
+
 	if group != "" {
 		matched := false
 		for _, it := range items {
-			if it.Group == group && it.Available() {
-				set[it.ID] = true
-				matched = true
+			if it.Group != group || !it.Available() {
+				continue
 			}
+			if cfg.Excluded(it.ID) {
+				skipped = append(skipped, it.ID)
+				continue
+			}
+			set[it.ID] = true
+			matched = true
 		}
 		if !matched {
 			return nil, fmt.Errorf("no available items in group: %s", group)
@@ -91,10 +104,19 @@ func resolveIDs(items []catalog.Item, ids []string, group string, safeOnly bool)
 
 	if safeOnly {
 		for _, it := range items {
-			if it.Level == catalog.Safe && it.Available() {
-				set[it.ID] = true
+			if it.Level != catalog.Safe || !it.Available() {
+				continue
 			}
+			if cfg.Excluded(it.ID) {
+				skipped = append(skipped, it.ID)
+				continue
+			}
+			set[it.ID] = true
 		}
+	}
+
+	if len(skipped) > 0 {
+		fmt.Printf("excluded by config: %s\n", strings.Join(uniqueStrings(skipped), ", "))
 	}
 
 	out := make([]string, 0, len(set))
@@ -104,6 +126,19 @@ func resolveIDs(items []catalog.Item, ids []string, group string, safeOnly bool)
 		}
 	}
 	return out, nil
+}
+
+func uniqueStrings(in []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, s := range in {
+		if seen[s] {
+			continue
+		}
+		seen[s] = true
+		out = append(out, s)
+	}
+	return out
 }
 
 func dryRunSuffix(dry bool) string {

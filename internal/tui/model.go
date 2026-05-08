@@ -53,12 +53,22 @@ type Model struct {
 }
 
 // New constructs the initial Model and starts scanning available items.
-func New(items []catalog.Item) Model {
+// excludeIDs (typically from config) are filtered out entirely.
+func New(items []catalog.Item, excludeIDs []string) Model {
+	excludedSet := make(map[string]bool, len(excludeIDs))
+	for _, id := range excludeIDs {
+		excludedSet[id] = true
+	}
+
 	available := items[:0:0]
 	for _, it := range items {
-		if it.Available() {
-			available = append(available, it)
+		if !it.Available() {
+			continue
 		}
+		if excludedSet[it.ID] {
+			continue
+		}
+		available = append(available, it)
 	}
 	sort.SliceStable(available, func(i, j int) bool {
 		if available[i].Group != available[j].Group {

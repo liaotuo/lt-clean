@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/liaotuo/lt-clean/internal/catalog"
+	"github.com/liaotuo/lt-clean/internal/config"
 	"github.com/liaotuo/lt-clean/internal/tui"
 	"github.com/spf13/cobra"
 )
@@ -18,8 +19,12 @@ var rootCmd = &cobra.Command{
 		"Run with no arguments to launch the interactive TUI.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		items := catalog.Build()
-		p := tea.NewProgram(tui.New(items), tea.WithAltScreen())
-		_, err := p.Run()
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
+		p := tea.NewProgram(tui.New(items, cfg.Exclude), tea.WithAltScreen())
+		_, err = p.Run()
 		return err
 	},
 }

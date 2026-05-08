@@ -10,22 +10,33 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/liaotuo/lt-clean/internal/catalog"
+	"github.com/liaotuo/lt-clean/internal/config"
 	"github.com/liaotuo/lt-clean/internal/scanner"
 	"github.com/spf13/cobra"
 )
 
 var scanJSON bool
+var scanAll  bool
 
 var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan all catalog items and report sizes (non-interactive)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		items := catalog.Build()
+		cfg, err := config.Load()
+		if err != nil {
+			return err
+		}
+
 		available := items[:0:0]
 		for _, it := range items {
-			if it.Available() {
-				available = append(available, it)
+			if !it.Available() {
+				continue
 			}
+			if !scanAll && cfg.Excluded(it.ID) {
+				continue
+			}
+			available = append(available, it)
 		}
 
 		var results []scanner.Result
@@ -46,6 +57,7 @@ var scanCmd = &cobra.Command{
 				ID, Group, Title, Level string
 				SizeBytes               int64
 				Error                   string `json:",omitempty"`
+				Hint                    string
 			}
 			var rows []out
 			for _, r := range results {
@@ -53,9 +65,14 @@ var scanCmd = &cobra.Command{
 				if r.Err != nil {
 					e = r.Err.Error()
 				}
+				hint := ""
+				if it := catalog.FindByID(available, r.ID); it != nil {
+					hint = it.Hint
+				}
 				rows = append(rows, out{
 					ID: r.ID, Group: r.Group, Title: r.Title,
 					Level: r.Level.String(), SizeBytes: r.SizeBytes, Error: e,
+					Hint: hint,
 				})
 			}
 			return json.NewEncoder(os.Stdout).Encode(rows)
@@ -82,5 +99,6 @@ var scanCmd = &cobra.Command{
 
 func init() {
 	scanCmd.Flags().BoolVar(&scanJSON, "json", false, "emit machine-readable JSON")
+	scanCmd.Flags().BoolVar(&scanAll, "all", false, "include items excluded by config")
 	rootCmd.AddCommand(scanCmd)
 }
