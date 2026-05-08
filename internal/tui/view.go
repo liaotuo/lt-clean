@@ -6,6 +6,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/liaotuo/lt-clean/internal/catalog"
+	"github.com/liaotuo/lt-clean/internal/cleaner"
 )
 
 func (m Model) View() string {
@@ -65,15 +66,29 @@ func (m Model) viewSelect() string {
 		b.WriteString(line + "\n")
 	}
 
+	// Cursor-row hint
+	if len(m.rows) > 0 && m.cursor >= 0 && m.cursor < len(m.rows) {
+		hint := m.rows[m.cursor].item.Hint
+		if hint != "" {
+			b.WriteString("\n" + dimStyle.Render("  "+hint) + "\n")
+		}
+	}
+
 	totalSelected := m.selectedSize()
+	modeTag := "trash"
+	if m.mode == cleaner.ModePermanent {
+		modeTag = "permanent"
+	}
 	b.WriteString("\n" +
-		fmt.Sprintf("selected: %s",
-			okStyle.Render(humanize.Bytes(uint64(totalSelected)))))
+		fmt.Sprintf("selected: %s   mode: %s",
+			okStyle.Render(humanize.Bytes(uint64(totalSelected))),
+			dimStyle.Render(modeTag)))
 
 	keys := []string{
 		"↑↓/jk move",
 		"space toggle",
 		"a all-safe",
+		"p permanent",
 		"d dry-run",
 		"c clean",
 		"q quit",

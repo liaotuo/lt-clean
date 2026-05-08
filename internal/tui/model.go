@@ -37,6 +37,7 @@ type Model struct {
 	cursor   int
 	selected map[string]bool
 	dryRun   bool
+	mode     cleaner.Mode // ModeTrash by default (zero value)
 
 	scanCh    <-chan scanner.Result
 	scanCtx   context.Context

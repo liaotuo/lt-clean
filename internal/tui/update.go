@@ -113,6 +113,12 @@ func (m Model) handleSelectKey(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case "d":
 		m.dryRun = !m.dryRun
+	case "p":
+		if m.mode == cleaner.ModeTrash {
+			m.mode = cleaner.ModePermanent
+		} else {
+			m.mode = cleaner.ModeTrash
+		}
 	case "c":
 		ids := m.gatherSelected()
 		if len(ids) == 0 {
@@ -178,11 +184,12 @@ func (m Model) beginClean() (tea.Model, tea.Cmd) {
 	}
 	ids := m.cleanIDs
 	dryRun := m.dryRun
+	mode := m.mode
 	progCh := m.progCh
 	doneCh := m.doneCh
 
 	go func() {
-		summary := cleaner.Run(items, ids, cleaner.ModePermanent, dryRun, func(p cleaner.Progress) {
+		summary := cleaner.Run(items, ids, mode, dryRun, func(p cleaner.Progress) {
 			progCh <- p
 		})
 		close(progCh)
