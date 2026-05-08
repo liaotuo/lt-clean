@@ -16,7 +16,7 @@ make fmt vet            # gofmt + go vet
 make tidy               # go mod tidy
 
 # Run a single test
-go test ./internal/catalog -run TestBuildHas29Items
+go test ./internal/catalog -run TestBuildHas46Items
 go test ./internal/cleaner -run TestExecuteRmGlobInDir -v
 
 # Run the TUI directly
@@ -36,15 +36,16 @@ The flow is a one-way pipeline: **catalog → scanner → cleaner**, with the TU
 
 ```
 main.go ─► cmd/ (cobra)
-              ├─ root.go    → tui.New(catalog.Build()) for interactive mode
+              ├─ root.go    → tui.New(catalog.Build(), cfg.Exclude) for interactive mode
               ├─ scan.go    → catalog.Build → scanner.Run → table or JSON
               ├─ clean.go   → resolveIDs → cleaner.Run with progress callback
               └─ version.go
 
 internal/
-  catalog/   29 hard-coded Items with Probe/Action/SafetyLevel
+  catalog/   46 hard-coded Items with Hint/Probe/Action/SafetyLevel
   scanner/   concurrent du-style sizing (8 workers, 120s/item timeout)
-  cleaner/   serial action execution + before/after diff for "freed"
+  cleaner/   serial action execution + before/after diff; ModeTrash/Permanent
+  config/    Load ~/.config/lt-clean/config.json (optional exclude list)
   sysutil/   home dir + PATH lookup helpers
   tui/       Bubble Tea: model.go, update.go, view.go, messages.go, styles.go
 ```
@@ -55,11 +56,12 @@ internal/
 
 - **`Group`** — one of `dev_caches | ide | mobile | system` (TUI sort order is fixed in `tui.groupOrder`).
 - **`Level`** — `Safe` / `Costly` / `Destructive`. Drives UI color, `--safe` selection, and the TUI's destructive-confirm dialog.
+- **`Hint`** — one-line Chinese description shown in the TUI footer under the cursor row. Every item must have one (guarded by `TestEveryItemHasHint`).
 - **`SizePaths`** — directories the scanner sums. May be empty for command-only items (e.g. `pnpm store prune`, `qlmanage -r cache`); the TUI keeps these even when their size is 0.
 - **`Action`** — one of five kinds: `ActRmDir`, `ActRmGlobInDir`, `ActCmd`, `ActMultiPath`, `ActDsStoreSweep`. See the field-usage comment on `Action`.
 - **`Probe`** — gates availability per machine. Common probes: `probePaths` (any `SizePaths` exists), `probeCmd(name)` (binary on PATH), `probeAlways`. The TUI and `scan` filter to `Available()` items before scanning.
 
-Two tests pin the expected catalog: `TestBuildHas29Items` and `TestBuildHasAllExpectedIDs`. **Adding or removing an item requires updating both.**
+Three tests pin the catalog: `TestBuildHas46Items`, `TestBuildHasAllExpectedIDs`, and `TestEveryItemHasHint`. **Adding or removing an item requires updating all three.**
 
 ### Scanner (`internal/scanner`)
 
@@ -68,6 +70,8 @@ Two tests pin the expected catalog: `TestBuildHas29Items` and `TestBuildHasAllEx
 ### Cleaner (`internal/cleaner`)
 
 `Run` executes serially (not concurrent) — this also matches Rust semantics. For each id it: measures `before` via `scanner.DirSize`, runs the action, measures `after`, and reports `freed = max(0, before-after)`. `Execute` is the action dispatcher; missing paths are no-ops, never errors. `ActRmGlobInDir` only returns an error if *no* matching files were removed (otherwise partial success is fine). `--dry-run` short-circuits before `Execute` and emits `status="dryrun"` per id.
+
+By default `Run` operates in `ModeTrash`: file-removing actions move targets into `~/.Trash/<basename>-<UTC ts>` via `os.Rename`. `--permanent` (CLI) or `p` (TUI) switches to `ModePermanent` (`os.RemoveAll`). The `trash` catalog item is forced to `ModePermanent` regardless of mode (it would self-loop), and `ActDsStoreSweep` is always permanent (thousands of tiny files). Cross-volume rename returns `ErrCrossVolume` and the cleaner falls back to permanent removal with a stderr warning. `internal/cleaner/trash.go` implements `Trash(path)` — pure Go, no cgo, no `osascript`.
 
 ### TUI (`internal/tui`)
 
@@ -79,3 +83,5 @@ Bubble Tea `Model`/`Update`/`View` state machine: `stateScan → stateSelect →
 - **Errors from missing paths are not errors.** Both scanner and cleaner treat `ENOENT` as "nothing to do."
 - **`Costly` ≠ `Destructive`.** `Costly` means "rebuild is slow/expensive" (Playwright browsers, Maven repo). `Destructive` means "real user data" (Trash, iOS backups). Only `Destructive` triggers the confirm dialog and is excluded from `--safe`.
 - **macOS-only paths.** `home/Library/...` is everywhere. If you're tempted to add a Linux path, the README calls out that Linux/Windows is "planned" — coordinate with whatever cross-platform refactor lands first rather than scattering `runtime.GOOS` checks.
+- **Trash by default.** Default deletion goes through `~/.Trash` so a wrong selection is recoverable. `--permanent` opts out for one-shot cleanup. The `trash` catalog item itself is forced permanent in `cleaner.Run`.
+- **Optional config at `~/.config/lt-clean/config.json`.** Currently a single `exclude` list of catalog IDs. JSON, stdlib only — do not add a TOML/INI dep without a strong reason. Malformed JSON returns an error (don't silently fall back).
