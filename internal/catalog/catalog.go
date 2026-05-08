@@ -7,9 +7,14 @@ import (
 	"github.com/liaotuo/lt-clean/internal/sysutil"
 )
 
-// Build returns the full catalog of cleanable items (29 entries).
+// Build returns the full catalog of cleanable items (46 entries).
 //
-// Mirrors the Rust build_catalog() in lt-tool/src/cleaner.rs.
+// Mirrors the Rust build_catalog() in lt-tool/src/cleaner.rs, extended with
+// macOS dev-cache entries added after the initial port.
+//
+// Note: huggingface and bazel live under ~/.cache and overlap with xdg_cache.
+// Both items coexist; running them in series is idempotent (the second pass
+// finds the path already gone and no-ops).
 func Build() []Item {
 	home := sysutil.Home()
 	if home == "" {
@@ -187,6 +192,113 @@ func Build() []Item {
 			Action:    Action{Kind: ActCmd, Program: "docker", Args: []string{"system", "prune", "-a", "-f"}},
 			Probe:     probeCmd("docker"),
 		},
+		{
+			ID: "carthage", Group: "dev_caches", Title: "Carthage", Level: Safe,
+			Hint:      "Carthage 下载和构建产物缓存。重新构建会重新下载（数分钟）。",
+			SizePaths: []string{filepath.Join(home, "Library/Caches/org.carthage.CarthageKit")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, "Library/Caches/org.carthage.CarthageKit")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "poetry", Group: "dev_caches", Title: "Poetry", Level: Safe,
+			Hint:      "Poetry 包下载缓存。下次 poetry install 会重新下载。",
+			SizePaths: []string{filepath.Join(home, "Library/Caches/pypoetry")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, "Library/Caches/pypoetry")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "pyenv", Group: "dev_caches", Title: "pyenv 已装版本", Level: Costly,
+			Hint:      "pyenv 已安装的 Python 版本。删除后需 pyenv install 重装（每个版本数分钟）。",
+			SizePaths: []string{filepath.Join(home, ".pyenv/versions")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".pyenv/versions")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "deno", Group: "dev_caches", Title: "Deno", Level: Safe,
+			Hint:      "Deno 模块和 npm 包缓存。下次运行会重新下载。",
+			SizePaths: []string{filepath.Join(home, "Library/Caches/deno")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, "Library/Caches/deno")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "gem", Group: "dev_caches", Title: "RubyGems", Level: Safe,
+			Hint:      "RubyGems 用户级安装目录。bundle install 会重新下载。",
+			SizePaths: []string{filepath.Join(home, ".gem")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".gem")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "pub_cache", Group: "dev_caches", Title: "Dart pub", Level: Safe,
+			Hint:      "Dart/Flutter 包下载缓存。下次 flutter pub get 会重新下载。",
+			SizePaths: []string{filepath.Join(home, ".pub-cache")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".pub-cache")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "terraform_plugins", Group: "dev_caches", Title: "Terraform plugins", Level: Safe,
+			Hint:      "Terraform provider 插件缓存。下次 terraform init 会重新下载。",
+			SizePaths: []string{filepath.Join(home, ".terraform.d/plugin-cache")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".terraform.d/plugin-cache")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "huggingface", Group: "dev_caches", Title: "HuggingFace", Level: Costly,
+			Hint:      "HuggingFace 模型与数据集缓存。下次加载会重新下载（GB 级）。",
+			SizePaths: []string{filepath.Join(home, ".cache/huggingface")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".cache/huggingface")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "ollama", Group: "dev_caches", Title: "Ollama 模型", Level: Costly,
+			Hint:      "Ollama 本地模型权重。删除后需 ollama pull 重新下载（每个模型 GB 级）。",
+			SizePaths: []string{filepath.Join(home, ".ollama/models")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".ollama/models")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "composer", Group: "dev_caches", Title: "Composer", Level: Safe,
+			Hint:      "PHP Composer 下载缓存。下次 composer install 会重新下载。",
+			SizePaths: []string{filepath.Join(home, ".composer/cache")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".composer/cache")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "nuget", Group: "dev_caches", Title: "NuGet", Level: Safe,
+			Hint:      ".NET NuGet 包下载缓存。下次 dotnet restore 会重新下载。",
+			SizePaths: []string{filepath.Join(home, ".nuget/packages")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".nuget/packages")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "sbt", Group: "dev_caches", Title: "sbt / Ivy", Level: Safe,
+			Hint: "sbt 和 Ivy（Scala）依赖缓存。下次构建会重新下载（数分钟）。",
+			SizePaths: []string{
+				filepath.Join(home, ".sbt"),
+				filepath.Join(home, ".ivy2"),
+			},
+			Action: Action{
+				Kind: ActMultiPath,
+				Paths: []string{
+					filepath.Join(home, ".sbt"),
+					filepath.Join(home, ".ivy2"),
+				},
+			},
+			Probe: probePaths,
+		},
+		{
+			ID: "bazel", Group: "dev_caches", Title: "Bazel", Level: Safe,
+			Hint:      "Bazel 用户构建缓存。下次构建会重新下载/编译（首次较慢）。",
+			SizePaths: []string{filepath.Join(home, ".cache/bazel")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".cache/bazel")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "aws_cli", Group: "dev_caches", Title: "AWS CLI", Level: Safe,
+			Hint:      "AWS CLI 凭证和命令缓存。会按需重新生成。",
+			SizePaths: []string{filepath.Join(home, ".aws/cli/cache")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".aws/cli/cache")}},
+			Probe:     probePaths,
+		},
 
 		// ── ide ────────────────────────────────────────────────────────────
 		{
@@ -223,6 +335,20 @@ func Build() []Item {
 			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, "Library/Caches/JetBrains")}},
 			Probe:     probePaths,
 		},
+		{
+			ID: "swift_pm", Group: "ide", Title: "Swift PM", Level: Safe,
+			Hint:      "Swift Package Manager 下载缓存。下次构建会重新下载。",
+			SizePaths: []string{filepath.Join(home, "Library/Caches/org.swift.swiftpm")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, "Library/Caches/org.swift.swiftpm")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "xcode_archives", Group: "ide", Title: "Xcode Archives", Level: Destructive,
+			Hint:      "Xcode 已归档的 .xcarchive。删除后无法重新符号化对应版本的崩溃日志。",
+			SizePaths: []string{filepath.Join(home, "Library/Developer/Xcode/Archives")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, "Library/Developer/Xcode/Archives")}},
+			Probe:     probePaths,
+		},
 
 		// ── mobile ────────────────────────────────────────────────────────
 		{
@@ -237,6 +363,13 @@ func Build() []Item {
 			Hint:      "iTunes/Finder iOS 设备备份。删除后无法恢复对应快照。",
 			SizePaths: []string{filepath.Join(home, "Library/Application Support/MobileSync/Backup")},
 			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, "Library/Application Support/MobileSync/Backup")}},
+			Probe:     probePaths,
+		},
+		{
+			ID: "android_avd", Group: "mobile", Title: "Android AVD", Level: Costly,
+			Hint:      "Android 模拟器镜像。删除后需重新创建/下载（GB 级）。",
+			SizePaths: []string{filepath.Join(home, ".android/avd")},
+			Action:    Action{Kind: ActRmDir, Paths: []string{filepath.Join(home, ".android/avd")}},
 			Probe:     probePaths,
 		},
 
