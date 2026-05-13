@@ -3,6 +3,7 @@ package cleaner
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -110,5 +111,53 @@ func TestTrashErrIsExdev(t *testing.T) {
 	}
 	if errIsExdev(errors.New("some other error")) {
 		t.Errorf("errIsExdev incorrectly matched a non-EXDEV error")
+	}
+}
+
+func TestTrashProtectedDirFallsBackToContents(t *testing.T) {
+	home := withTempHome(t)
+
+	src := filepath.Join(home, "protected-logs")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	child := filepath.Join(src, "app.log")
+	if err := os.WriteFile(child, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("chmod", "+a", "group:everyone deny delete", src)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("chmod ACL failed: %v: %s", err, strings.TrimSpace(string(out)))
+	}
+	t.Cleanup(func() {
+		_ = exec.Command("chmod", "-N", src).Run()
+		_ = os.RemoveAll(src)
+	})
+
+	if err := Trash(src); err != nil {
+		t.Fatalf("Trash returned error: %v", err)
+	}
+
+	if _, err := os.Stat(src); err != nil {
+		t.Fatalf("protected dir should remain, got stat err=%v", err)
+	}
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		t.Fatalf("reading protected dir: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected protected dir to be emptied, got %d entries", len(entries))
+	}
+
+	trashEntries, err := os.ReadDir(filepath.Join(home, ".Trash"))
+	if err != nil {
+		t.Fatalf("reading .Trash: %v", err)
+	}
+	if len(trashEntries) != 1 {
+		t.Fatalf("expected 1 trashed child entry, got %d", len(trashEntries))
+	}
+	if !strings.HasPrefix(trashEntries[0].Name(), "app.log-") {
+		t.Fatalf("expected trashed child named app.log-<ts>, got %s", trashEntries[0].Name())
 	}
 }

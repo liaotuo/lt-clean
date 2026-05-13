@@ -19,7 +19,8 @@ var ErrCrossVolume = errors.New("cleaner: cross-volume rename, cannot trash")
 // Trash moves path into ~/.Trash with a timestamp-disambiguated name.
 // Returns nil for nonexistent paths. Returns ErrCrossVolume on EXDEV.
 func Trash(path string) error {
-	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
+	info, err := os.Stat(path)
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil
 	} else if err != nil {
 		return fmt.Errorf("trash stat %s: %w", path, err)
@@ -48,7 +49,35 @@ func Trash(path string) error {
 		if errIsExdev(err) {
 			return ErrCrossVolume
 		}
+		if info.IsDir() && errIsPermission(err) {
+			return trashDirContents(path)
+		}
 		return fmt.Errorf("trash rename %s -> %s: %w", path, dest, err)
+	}
+	return nil
+}
+
+func trashDirContents(path string) error {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return fmt.Errorf("trash read dir %s: %w", path, err)
+	}
+
+	var firstErr error
+	anyRemoved := false
+	for _, entry := range entries {
+		child := filepath.Join(path, entry.Name())
+		if err := Trash(child); err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		anyRemoved = true
+	}
+
+	if firstErr != nil && !anyRemoved {
+		return firstErr
 	}
 	return nil
 }
@@ -60,6 +89,12 @@ func errIsExdev(err error) bool {
 		return le.Err == syscall.EXDEV
 	}
 	return errors.Is(err, syscall.EXDEV)
+}
+
+func errIsPermission(err error) bool {
+	return errors.Is(err, fs.ErrPermission) ||
+		errors.Is(err, syscall.EACCES) ||
+		errors.Is(err, syscall.EPERM)
 }
 
 // errExdev returns a syscall.EXDEV error (used by tests).

@@ -3,6 +3,7 @@ package catalog
 import (
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/liaotuo/lt-clean/internal/sysutil"
 )
@@ -33,6 +34,15 @@ func Build() []Item {
 		return func(*Item) bool { return sysutil.CommandAvailable(name) }
 	}
 	probeAlways := func(*Item) bool { return true }
+	probeWritableDir := func(dir string) func(*Item) bool {
+		const accessWrite = 0x2
+		return func(*Item) bool {
+			if _, err := os.Stat(dir); err != nil {
+				return false
+			}
+			return syscall.Access(dir, accessWrite) == nil
+		}
+	}
 
 	items := []Item{
 		// ── dev_caches ────────────────────────────────────────────────────
@@ -397,7 +407,7 @@ func Build() []Item {
 				Dir:  "/private/var/log",
 				Exts: []string{"gz", "bz2"},
 			},
-			Probe: probePaths,
+			Probe: probeWritableDir("/private/var/log"),
 		},
 		{
 			ID: "quicklook_cache", Group: "system", Title: "QuickLook 缩略图", Level: Safe,
