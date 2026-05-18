@@ -114,7 +114,7 @@ They are still honored if you list them explicitly with `--id`.
 
 ## Catalog
 
-46 items across 4 groups.
+36 items across 4 groups.
 
 | Group       | ID                      | Level       | Title                   |
 |-------------|-------------------------|-------------|-------------------------|
@@ -123,10 +123,9 @@ They are still honored if you list them explicitly with `--id`.
 | dev_caches  | pip                     | Safe        | pip                     |
 | dev_caches  | conda                   | Safe        | Conda                   |
 | dev_caches  | npm                     | Safe        | npm                     |
-| dev_caches  | bun                     | Safe        | Bun                     |
-| dev_caches  | yarn                    | Safe        | Yarn                    |
+| dev_caches  | js_pkg_caches           | Safe        | JS 包管理器缓存         |
 | dev_caches  | pnpm                    | Safe        | pnpm                    |
-| dev_caches  | cargo_registry           | Safe        | Cargo registry          |
+| dev_caches  | cargo_registry          | Safe        | Cargo registry          |
 | dev_caches  | node_gyp                | Safe        | node-gyp                |
 | dev_caches  | typescript              | Safe        | TypeScript              |
 | dev_caches  | playwright              | Costly      | Playwright 浏览器       |
@@ -136,36 +135,27 @@ They are still honored if you list them explicitly with `--id`.
 | dev_caches  | cocoapods               | Costly      | CocoaPods 仓库          |
 | dev_caches  | xdg_cache               | Costly      | XDG 缓存                |
 | dev_caches  | docker                  | Costly      | Docker 镜像/构建缓存   |
-| dev_caches  | carthage                | Safe        | Carthage                 |
-| dev_caches  | poetry                  | Safe        | Poetry                   |
-| dev_caches  | pyenv                   | Costly      | pyenv 已装版本           |
-| dev_caches  | deno                    | Safe        | Deno                    |
-| dev_caches  | gem                     | Safe        | RubyGems                |
-| dev_caches  | pub_cache               | Safe        | Dart pub                 |
-| dev_caches  | terraform_plugins       | Safe        | Terraform plugins        |
-| dev_caches  | huggingface             | Costly      | HuggingFace              |
-| dev_caches  | ollama                  | Costly      | Ollama 模型              |
-| dev_caches  | composer                | Safe        | Composer                 |
-| dev_caches  | nuget                   | Safe        | NuGet                   |
-| dev_caches  | sbt                     | Safe        | sbt / Ivy               |
-| dev_caches  | bazel                   | Safe        | Bazel                   |
-| dev_caches  | aws_cli                 | Safe        | AWS CLI                 |
+| dev_caches  | poetry                  | Safe        | Poetry                  |
+| dev_caches  | pyenv                   | Costly      | pyenv 已装版本          |
+| dev_caches  | pub_cache               | Safe        | Dart pub                |
+| dev_caches  | huggingface             | Costly      | HuggingFace             |
+| dev_caches  | ollama                  | Costly      | Ollama 模型             |
 | ide         | xcode_derived           | Safe        | Xcode DerivedData       |
 | ide         | vscode_cache            | Safe        | VSCode Cache            |
 | ide         | jetbrains_cache         | Safe        | JetBrains               |
-| ide         | swift_pm                | Safe        | Swift PM               |
-| ide         | xcode_archives          | Destructive | Xcode Archives         |
+| ide         | swift_pm                | Safe        | Swift PM                |
+| ide         | xcode_archives          | Destructive | Xcode Archives          |
 | mobile      | ios_simulator_unavail   | Safe        | iOS Simulator 失效设备  |
-| mobile      | ios_backup              | Destructive | iOS 设备备份           |
-| mobile      | android_avd             | Costly      | Android AVD            |
+| mobile      | ios_backup              | Destructive | iOS 设备备份            |
+| mobile      | android_avd             | Costly      | Android AVD             |
 | system      | apfs_snapshots          | Costly      | APFS 本地快照           |
-| system      | user_logs               | Safe        | 用户日志                 |
-| system      | system_logs_archived    | Safe        | 已归档系统日志           |
+| system      | user_logs               | Safe        | 用户日志                |
+| system      | system_logs_archived    | Safe        | 已归档系统日志          |
 | system      | quicklook_cache         | Safe        | QuickLook 缩略图        |
-| system      | trash                   | Destructive | 回收站                   |
+| system      | trash                   | Destructive | 回收站                  |
 | system      | ds_store                | Safe        | .DS_Store 递归扫除      |
 
-46 items total.
+36 items total.
 
 ### Safety levels
 
