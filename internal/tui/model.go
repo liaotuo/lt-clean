@@ -79,8 +79,12 @@ func New(items []catalog.Item, excludeIDs []string) Model {
 	})
 
 	rows := make([]row, len(available))
+	selected := make(map[string]bool)
 	for i, it := range available {
 		rows[i] = row{item: it}
+		if it.Level == catalog.Safe {
+			selected[it.ID] = true
+		}
 	}
 
 	sp := spinner.New()
@@ -93,7 +97,7 @@ func New(items []catalog.Item, excludeIDs []string) Model {
 		state:     stateScan,
 		spinner:   sp,
 		rows:      rows,
-		selected:  make(map[string]bool),
+		selected:  selected,
 		scanCh:    ch,
 		scanCtx:   ctx,
 		scanCxl:   cancel,
