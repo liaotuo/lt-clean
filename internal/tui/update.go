@@ -41,6 +41,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cursor = 0
 		return m, nil
 
+	case diskFreeMsg:
+		m.diskFree = float64(msg)
+		return m, nil
+
 	case cleanProgressMsg:
 		for i := range m.rows {
 			if m.rows[i].item.ID == msg.ID {
@@ -111,21 +115,13 @@ func (m Model) handleSelectKey(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.selected[r.item.ID] = anyUnselectedSafe
 			}
 		}
-	case "d":
-		m.dryRun = !m.dryRun
-	case "p":
-		if m.mode == cleaner.ModeTrash {
-			m.mode = cleaner.ModePermanent
-		} else {
-			m.mode = cleaner.ModeTrash
-		}
 	case "c":
 		ids := m.gatherSelected()
 		if len(ids) == 0 {
 			return m, nil
 		}
 		m.cleanIDs = ids
-		if m.hasDestructive(ids) && !m.dryRun {
+		if m.hasDestructive(ids) {
 			m.state = stateConfirm
 			return m, nil
 		}
@@ -172,7 +168,6 @@ func contains(ids []string, target string) bool {
 	return false
 }
 
-// beginClean spawns the cleaner goroutine and transitions to the clean state.
 func (m Model) beginClean() (tea.Model, tea.Cmd) {
 	m.state = stateClean
 	m.progCh = make(chan cleaner.Progress, len(m.cleanIDs))
@@ -183,13 +178,11 @@ func (m Model) beginClean() (tea.Model, tea.Cmd) {
 		items[i] = r.item
 	}
 	ids := m.cleanIDs
-	dryRun := m.dryRun
-	mode := m.mode
 	progCh := m.progCh
 	doneCh := m.doneCh
 
 	go func() {
-		summary := cleaner.Run(items, ids, mode, dryRun, func(p cleaner.Progress) {
+		summary := cleaner.Run(items, ids, cleaner.ModeTrash, false, func(p cleaner.Progress) {
 			progCh <- p
 		})
 		close(progCh)

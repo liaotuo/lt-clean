@@ -9,6 +9,7 @@ import (
 	"github.com/liaotuo/lt-clean/internal/catalog"
 	"github.com/liaotuo/lt-clean/internal/cleaner"
 	"github.com/liaotuo/lt-clean/internal/scanner"
+	"github.com/liaotuo/lt-clean/internal/sysutil"
 )
 
 type state int
@@ -29,15 +30,15 @@ type row struct {
 	progress *cleaner.Progress
 }
 
-// Model is the Bubble Tea model.
+type diskFreeMsg float64
+
 type Model struct {
 	state    state
 	spinner  spinner.Model
 	rows     []row
 	cursor   int
 	selected map[string]bool
-	dryRun   bool
-	mode     cleaner.Mode // ModeTrash by default (zero value)
+	diskFree float64
 
 	scanCh    <-chan scanner.Result
 	scanCtx   context.Context
@@ -120,7 +121,13 @@ func groupOrder(g string) int {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(m.spinner.Tick, waitForScan(m.scanCh))
+	return tea.Batch(m.spinner.Tick, waitForScan(m.scanCh), fetchDiskFree())
+}
+
+func fetchDiskFree() tea.Cmd {
+	return func() tea.Msg {
+		return diskFreeMsg(sysutil.DiskFreeGB())
+	}
 }
 
 func waitForScan(ch <-chan scanner.Result) tea.Cmd {

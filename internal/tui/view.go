@@ -6,7 +6,6 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/liaotuo/lt-clean/internal/catalog"
-	"github.com/liaotuo/lt-clean/internal/cleaner"
 )
 
 func (m Model) View() string {
@@ -36,11 +35,7 @@ func (m Model) viewScan() string {
 
 func (m Model) viewSelect() string {
 	var b strings.Builder
-	b.WriteString(titleStyle.Render(" lt-clean "))
-	if m.dryRun {
-		b.WriteString(" " + costlyStyle.Render("[DRY RUN]"))
-	}
-	b.WriteString("\n")
+	b.WriteString(titleStyle.Render(" lt-clean ") + "\n")
 
 	currentGroup := ""
 	for i, r := range m.rows {
@@ -75,23 +70,21 @@ func (m Model) viewSelect() string {
 
 	// Status bar
 	totalSelected := m.selectedSize()
-	modeTag := "trash"
-	if m.mode == cleaner.ModePermanent {
-		modeTag = "permanent"
+	diskFreeStr := "—"
+	if m.diskFree > 0 {
+		diskFreeStr = fmt.Sprintf("%.1fG", m.diskFree)
 	}
 	b.WriteString("\n" + dividerStyle.Render("─"+strings.Repeat("─", 50)) + "\n")
-	b.WriteString(statusBarStyle.Render(fmt.Sprintf(" selected: %s │ mode: %s ",
+	b.WriteString(statusBarStyle.Render(fmt.Sprintf(" selected: %s │ free: %s ",
 		okStyle.Render(humanize.Bytes(uint64(totalSelected))),
-		dimStyle.Render(modeTag))) + "\n")
+		dimStyle.Render(diskFreeStr))) + "\n")
 
 	// Help bar with key hints
 	b.WriteString("\n" + dividerStyle.Render("─"+strings.Repeat("─", 50)) + "\n")
 	b.WriteString("  " + keyStyle.Render("↑↓/jk") + " " + dimStyle.Render("move") +
 		"  " + keyStyle.Render("space") + " " + dimStyle.Render("toggle") +
 		"  " + keyStyle.Render("a") + " " + dimStyle.Render("all-safe") + "\n")
-	b.WriteString("  " + keyStyle.Render("p") + " " + dimStyle.Render("permanent") +
-		"  " + keyStyle.Render("d") + " " + dimStyle.Render("dry-run") +
-		"  " + keyStyle.Render("c") + " " + dimStyle.Render("clean") +
+	b.WriteString("  " + keyStyle.Render("c") + " " + dimStyle.Render("clean") +
 		"  " + keyStyle.Render("q") + " " + dimStyle.Render("quit"))
 	return b.String()
 }
@@ -137,9 +130,6 @@ func (m Model) viewClean() string {
 				if r.progress.Err != nil {
 					detail = errStyle.Render(truncate(r.progress.Err.Error(), 60))
 				}
-			case "dryrun":
-				mark = costlyStyle.Render("○")
-				detail = dimStyle.Render("dry-run")
 			}
 		}
 		b.WriteString(fmt.Sprintf("  %s %s  %s\n", mark, padRight(r.item.Title, 30), detail))
