@@ -14,11 +14,47 @@ Single Go binary, ~5–10 MB, no runtime dependencies.
 
 ## Install
 
+### Option 1: `go install`
+
 ```bash
 go install github.com/liaotuo/lt-clean@latest
 ```
 
-Or build from source:
+### Option 2: download a prebuilt release archive
+
+Every Git tag like `v1.2.3` publishes GitHub Release assets:
+
+- `lt-clean_v1.2.3_darwin_arm64.tar.gz` for Apple Silicon Macs
+- `lt-clean_v1.2.3_darwin_amd64.tar.gz` for Intel Macs
+- `lt-clean_v1.2.3_linux_amd64.tar.gz` for Linux x86_64
+- `checksums.txt`
+
+Example for Apple Silicon:
+
+```bash
+curl -L -o lt-clean.tar.gz https://github.com/liaotuo/lt-clean/releases/download/v1.2.3/lt-clean_v1.2.3_darwin_arm64.tar.gz
+tar -xzf lt-clean.tar.gz
+chmod +x lt-clean
+mv lt-clean /usr/local/bin/lt-clean
+```
+
+### Option 3: download a CI artifact from a PR or `main`
+
+Each successful run of the `CI` workflow uploads tarballs for:
+
+- `darwin/amd64`
+- `darwin/arm64`
+- `linux/amd64`
+
+Open the workflow run on GitHub, then download the artifact matching your platform:
+
+- `lt-clean_darwin_arm64`
+- `lt-clean_darwin_amd64`
+- `lt-clean_linux_amd64`
+
+Each artifact contains a single `lt-clean` binary packed as `.tar.gz`.
+
+### Option 4: build from source
 
 ```bash
 git clone https://github.com/liaotuo/lt-clean
