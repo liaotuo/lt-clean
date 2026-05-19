@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -115,6 +116,9 @@ func TestTrashErrIsExdev(t *testing.T) {
 }
 
 func TestTrashProtectedDirFallsBackToContents(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("ACL-based protected dir test is macOS-only")
+	}
 	home := withTempHome(t)
 
 	src := filepath.Join(home, "protected-logs")

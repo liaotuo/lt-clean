@@ -12,9 +12,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -51,9 +51,9 @@ jobs:
           - goos: linux
             goarch: amd64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -71,7 +71,7 @@ jobs:
           tar -C dist -czf "${archive}" "lt-clean_${{ matrix.goos }}_${{ matrix.goarch }}"
 
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: lt-clean_${{ matrix.goos }}_${{ matrix.goarch }}
           path: dist/lt-clean_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz
