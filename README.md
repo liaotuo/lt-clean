@@ -1,223 +1,77 @@
 # lt-clean
 
-A disk-space reclaim tool **built specifically for developers** on macOS, with
-a TUI **and** scriptable CLI. Targets the things that actually pile up on a
-dev machine — language toolchain caches (Homebrew, Go, npm, Bun, Cargo, pip,
-…), IDE artifacts (Xcode DerivedData, JetBrains, VSCode), mobile build state
-(iOS Simulator, Android SDK), and APFS snapshots.
+macOS 磁盘清理工具，专为开发者设计。TUI + CLI 双模式。
 
-It is **not** a generic Mac cleaner: it does not touch browser caches, photo
-libraries, Mail data, or end-user application state. The focus is the stuff a
-developer can safely re-fetch or rebuild.
+针对开发机上的缓存堆积：语言工具链（Homebrew、Go、npm、Cargo、pip…）、IDE 产物（Xcode DerivedData、JetBrains、VSCode）、移动端构建状态（iOS Simulator、Android SDK）、APFS 快照。
 
-Single Go binary, ~5–10 MB, no runtime dependencies.
+**不碰**浏览器缓存、照片库、邮件数据等用户应用状态。只清理开发者可以安全重建的内容。
 
-## Install
+单二进制，~5–10 MB，无运行时依赖。
 
-### Option 1: `go install`
+## 安装
 
 ```bash
+# go install
 go install github.com/liaotuo/lt-clean@latest
+
+# 或从 GitHub Releases 下载预编译版本
+# 或 make build-small 从源码构建
 ```
 
-### Option 2: download a prebuilt release archive
+## 用法
 
-Every Git tag like `v1.2.3` publishes GitHub Release assets:
-
-- `lt-clean_v1.2.3_darwin_arm64.tar.gz` for Apple Silicon Macs
-- `lt-clean_v1.2.3_darwin_amd64.tar.gz` for Intel Macs
-- `lt-clean_v1.2.3_linux_amd64.tar.gz` for Linux x86_64
-- `checksums.txt`
-
-Example for Apple Silicon:
-
-```bash
-curl -L -o lt-clean.tar.gz https://github.com/liaotuo/lt-clean/releases/download/v1.2.3/lt-clean_v1.2.3_darwin_arm64.tar.gz
-tar -xzf lt-clean.tar.gz
-chmod +x lt-clean
-mv lt-clean /usr/local/bin/lt-clean
-```
-
-### Option 3: download a CI artifact from a PR or `main`
-
-Each successful run of the `CI` workflow uploads tarballs for:
-
-- `darwin/amd64`
-- `darwin/arm64`
-- `linux/amd64`
-
-Open the workflow run on GitHub, then download the artifact matching your platform:
-
-- `lt-clean_darwin_arm64`
-- `lt-clean_darwin_amd64`
-- `lt-clean_linux_amd64`
-
-Each artifact contains a single `lt-clean` binary packed as `.tar.gz`.
-
-### Option 4: build from source
-
-```bash
-git clone https://github.com/liaotuo/lt-clean
-cd lt-clean
-make build-small        # produces bin/lt-clean (~2 MB after upx)
-```
-
-## Usage
-
-### Interactive TUI (default)
+### TUI（默认）
 
 ```bash
 lt-clean
 ```
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ lt-clean   18 items found                               │
-│                                                         │
-│ Dev caches                                              │
-│ ▸ [x] SAFE Homebrew                       1.2 GB        │
-│   [ ] SAFE Go 模块                        4.7 GB        │
-│   [x] SAFE Cargo registry                 8.1 GB        │
-│   [ ] COST Playwright 浏览器              1.4 GB        │
-│ ...                                                     │
-│ selected: 9.3 GB                                        │
-│                                                         │
-│ ↑↓/jk move  space toggle  a all-safe  d dry-run  c clean│
-└─────────────────────────────────────────────────────────┘
-```
+交互式界面，`↑↓` 导航，`space` 选择，`c` 清理，`d` 干跑模式，`q` 退出。
 
-Keys:
-- `↑↓` / `jk` — navigate
-- `space` / `enter` — toggle selection
-- `a` — toggle all Safe-level items
-- `d` — toggle dry-run mode
-- `c` — clean selected
-- `y` / `n` — confirm destructive actions
-- `q` — quit
-
-### Scriptable CLI
+### CLI
 
 ```bash
-# scan only, print a table
-lt-clean scan
-lt-clean scan --json
+lt-clean scan                    # 扫描并打印表格
+lt-clean scan --json             # JSON 输出
 
-# clean specific items
-lt-clean clean --id brew,go_modcache
-lt-clean clean --id playwright --dry-run
-
-# clean by group
-lt-clean clean --group dev_caches
-
-# clean every Safe-level item available on this machine
-lt-clean clean --safe
-
-# permanently delete (bypass ~/.Trash)
-lt-clean clean --safe --permanent
+lt-clean clean --id brew,go_modcache    # 清理指定项
+lt-clean clean --safe                   # 清理所有 Safe 级项目
+lt-clean clean --safe --permanent       # 永久删除（不进回收站）
 ```
 
-## Trash by default
+## 特性
 
-`clean` moves removed files into `~/.Trash` instead of permanently deleting them.
-Recover anything mistakenly cleaned by dragging it back from the macOS Trash.
+- **默认进回收站** — 清理的文件移入 `~/.Trash`，可恢复
+- **三级安全等级** — Safe（可安全清理）、Costly（重建较慢）、Destructive（用户数据，需确认）
+- **可配置排除** — `~/.config/lt-clean/config.json` 排除特定项目
 
-Two exemptions are always permanent regardless of mode:
+## 目录
 
-- The `trash` catalog item itself (cleaning it would self-loop into itself).
-- The `.DS_Store` recursive sweep (thousands of tiny files; trashing each is wasteful).
+36 项，分 4 组：
 
-To permanently delete in one run, pass `--permanent`. The TUI shows the current mode
-in the status line and toggles with `p`.
+| 组          | 示例项目                                    |
+|-------------|---------------------------------------------|
+| dev_caches  | Homebrew, Go 模块, npm, Cargo, Docker       |
+| ide         | Xcode DerivedData, VSCode, JetBrains        |
+| mobile      | iOS Simulator, Android AVD                  |
+| system      | APFS 快照, 用户日志, 回收站, .DS_Store      |
 
-Note: "freed" in the output reflects bytes that left the source path. In trash
-mode they still occupy disk in `~/.Trash` until you empty it (or run
-`lt-clean clean --id trash`, which always deletes permanently).
+完整列表见 `lt-clean scan`。
 
-## Configuration
+## 平台
 
-`lt-clean` reads `~/.config/lt-clean/config.json` to exclude catalog items:
+| 平台   | 状态 |
+|--------|:----:|
+| macOS  |  ✓   |
+| Linux  |  ○   |
+| Windows|  ○   |
 
-```json
-{
-  "exclude": ["trash", "ios_backup"]
-}
-```
-
-Listed IDs are hidden from the TUI and skipped by `scan` and `clean --safe`.
-They are still honored if you list them explicitly with `--id`.
-
-`scan --all` shows everything, ignoring the exclude list.
-
-## Catalog
-
-36 items across 4 groups.
-
-| Group       | ID                      | Level       | Title                   |
-|-------------|-------------------------|-------------|-------------------------|
-| dev_caches  | brew                    | Safe        | Homebrew                |
-| dev_caches  | go_modcache             | Safe        | Go 模块                 |
-| dev_caches  | pip                     | Safe        | pip                     |
-| dev_caches  | conda                   | Safe        | Conda                   |
-| dev_caches  | npm                     | Safe        | npm                     |
-| dev_caches  | js_pkg_caches           | Safe        | JS 包管理器缓存         |
-| dev_caches  | pnpm                    | Safe        | pnpm                    |
-| dev_caches  | cargo_registry          | Safe        | Cargo registry          |
-| dev_caches  | node_gyp                | Safe        | node-gyp                |
-| dev_caches  | typescript              | Safe        | TypeScript              |
-| dev_caches  | playwright              | Costly      | Playwright 浏览器       |
-| dev_caches  | cypress                 | Costly      | Cypress                 |
-| dev_caches  | gradle                  | Costly      | Gradle                  |
-| dev_caches  | maven                   | Costly      | Maven                   |
-| dev_caches  | cocoapods               | Costly      | CocoaPods 仓库          |
-| dev_caches  | xdg_cache               | Costly      | XDG 缓存                |
-| dev_caches  | docker                  | Costly      | Docker 镜像/构建缓存   |
-| dev_caches  | poetry                  | Safe        | Poetry                  |
-| dev_caches  | pyenv                   | Costly      | pyenv 已装版本          |
-| dev_caches  | pub_cache               | Safe        | Dart pub                |
-| dev_caches  | huggingface             | Costly      | HuggingFace             |
-| dev_caches  | ollama                  | Costly      | Ollama 模型             |
-| ide         | xcode_derived           | Safe        | Xcode DerivedData       |
-| ide         | vscode_cache            | Safe        | VSCode Cache            |
-| ide         | jetbrains_cache         | Safe        | JetBrains               |
-| ide         | swift_pm                | Safe        | Swift PM                |
-| ide         | xcode_archives          | Destructive | Xcode Archives          |
-| mobile      | ios_simulator_unavail   | Safe        | iOS Simulator 失效设备  |
-| mobile      | ios_backup              | Destructive | iOS 设备备份            |
-| mobile      | android_avd             | Costly      | Android AVD             |
-| system      | apfs_snapshots          | Costly      | APFS 本地快照           |
-| system      | user_logs               | Safe        | 用户日志                |
-| system      | system_logs_archived    | Safe        | 已归档系统日志          |
-| system      | quicklook_cache         | Safe        | QuickLook 缩略图        |
-| system      | trash                   | Destructive | 回收站                  |
-| system      | ds_store                | Safe        | .DS_Store 递归扫除      |
-
-36 items total.
-
-### Safety levels
-
-- **Safe** — caches that auto-rebuild from network. Free to wipe.
-- **Costly** — caches that auto-rebuild but redownload may be slow / large
-  (Playwright browsers, Maven, Gradle, APFS snapshots).
-- **Destructive** — real user data (iOS backups, Trash). Requires explicit
-  `--id` selection, and the TUI shows a confirmation dialog.
-
-## Platform support
-
-| Platform | Status |
-|----------|:------:|
-| macOS    |   ✓    |
-| Linux    |   ○    |
-| Windows  |   ○    |
-
-v1 is macOS-only — most paths are macOS-specific (`~/Library/...`).
-
-## Development
+## 开发
 
 ```bash
-make test              # run unit tests
-make build             # debug build
-make build-small       # release build with -s -w + upx
-make fmt vet
+make test         # 单元测试
+make build        # 调试构建
+make build-small  # 发布构建（~2 MB）
 ```
 
 ## License
