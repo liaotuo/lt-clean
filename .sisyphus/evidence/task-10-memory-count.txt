@@ -1,0 +1,7 @@
+Scenario: Project memory count is updated
+Date: 2026-05-18
+
+Search AGENTS.md and CLAUDE.md for "46" and "36" in catalog context
+Expected: No stale 46-item catalog references; 36-item references present
+
+Result:

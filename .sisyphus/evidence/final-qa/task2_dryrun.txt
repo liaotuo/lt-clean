@@ -1,0 +1,4 @@
+=== RUN   TestRunDryRunEmitsDryrun
+--- PASS: TestRunDryRunEmitsDryrun (0.00s)
+PASS
+ok  	github.com/liaotuo/lt-clean/internal/cleaner	0.544s

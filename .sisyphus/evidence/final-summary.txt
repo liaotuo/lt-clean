@@ -1,0 +1,98 @@
+# Catalog Simplification - Final Summary
+
+Date: 2026-05-18
+
+## Changes Made
+
+### Catalog Simplification (46 → 36 items)
+
+**Removed Items (9):**
+- carthage
+- deno
+- gem
+- composer
+- nuget
+- sbt
+- bazel
+- aws_cli
+- terraform_plugins
+
+**Merged Items (2 → 1):**
+- Removed: yarn, bun
+- Added: js_pkg_caches (path-only merged item for Yarn/Bun cache directories)
+
+**Kept Items:**
+- All mainstream items: brew, go_modcache, pip, conda, npm, pnpm, cargo_registry, node_gyp, typescript, playwright, cypress, gradle, maven, cocoapods, xdg_cache, docker, poetry, pyenv, pub_cache, huggingface, ollama
+- All IDE items: xcode_derived, vscode_cache, jetbrains_cache, swift_pm, xcode_archives
+- All mobile items: ios_simulator_unavail, ios_backup, android_avd
+- All system items: apfs_snapshots, user_logs, system_logs_archived, quicklook_cache, trash, ds_store
+
+### Files Modified
+
+1. **internal/catalog/catalog.go**
+   - Updated comment from 46 to 36 entries
+   - Removed 9 niche item literals
+   - Replaced yarn and bun with js_pkg_caches merged item
+
+2. **internal/catalog/catalog_test.go**
+   - Updated TestBuildHas46Items → TestBuildHas36Items
+   - Updated expected IDs list to include js_pkg_caches
+   - Removed yarn and bun from expected IDs
+
+3. **README.md**
+   - Updated catalog count from 46 to 36 items
+   - Updated catalog table with simplified item list
+   - Added js_pkg_caches entry
+
+4. **AGENTS.md**
+   - Updated test command reference
+   - Updated catalog item count
+   - Updated test name reference
+
+5. **CLAUDE.md**
+   - Updated test command reference
+   - Updated catalog item count
+   - Updated test name reference
+
+## Verification Results
+
+### Tests
+✓ All catalog tests pass (36 items, expected IDs, hints, structural tests)
+✓ All CLI tests pass (resolveIDs, safe mode, group filter)
+✓ All package tests pass (go test ./...)
+✓ Vet passes (make vet)
+✓ Build succeeds (make build)
+
+### CLI Behavior
+✓ Removed IDs are rejected with "unknown id" error
+✓ js_pkg_caches is accepted and works in dry-run
+✓ trash item still works
+✓ Safe mode excludes Destructive and Costly items
+✓ Scan JSON output is valid and includes js_pkg_caches
+
+### Safety Invariants
+✓ trash remains Destructive
+✓ ios_backup remains Destructive
+✓ xcode_archives remains Destructive
+✓ ds_store remains the only ActDsStoreSweep item
+✓ No alias system added
+✓ No new dependencies added
+✓ Scanner/cleaner behavior unchanged
+
+## Definition of Done
+
+- [x] go test ./... passes
+- [x] make vet passes
+- [x] make build passes
+- [x] go test ./internal/catalog verifies 36-item catalog count
+- [x] go run . scan --json returns valid JSON
+- [x] go run . clean --id carthage --dry-run fails with unknown-id error
+- [x] go run . clean --id js_pkg_caches --dry-run succeeds
+- [x] go run . clean --id trash --dry-run still succeeds
+- [x] Documentation no longer claims 46 items
+
+## Breaking Changes
+
+- Old CLI IDs no longer work: carthage, deno, gem, composer, nuget, sbt, bazel, aws_cli, terraform_plugins, yarn, bun
+- No backward-compatible alias mechanism provided (as per plan)
+- Users must update scripts that reference removed IDs

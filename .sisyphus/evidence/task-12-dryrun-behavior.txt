@@ -1,0 +1,11 @@
+Scenario: Dry-run ID behavior matches simplified catalog
+Date: 2026-05-18
+
+Commands:
+1. go run . clean --id carthage --dry-run (removed ID)
+2. go run . clean --id trash --dry-run (protected ID)
+3. go run . clean --safe --dry-run (safe mode)
+
+Expected: Removed ID fails unknown; trash and safe dry-run commands do not fail
+
+Result:

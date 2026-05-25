@@ -6,8 +6,8 @@ import (
 
 func TestApplyMinSize(t *testing.T) {
 	root := &Node{
-		Name:     "root",
-		IsDir:    true,
+		Name:  "root",
+		IsDir: true,
 		Children: []*Node{
 			{Name: "small", Size: 1 * 1024 * 1024, IsDir: false},
 			{Name: "medium", Size: 50 * 1024 * 1024, IsDir: false},
@@ -55,8 +55,8 @@ func TestApplyMinSizeEmptyDir(t *testing.T) {
 
 func TestTopNFiles(t *testing.T) {
 	root := &Node{
-		Name:     "root",
-		IsDir:    true,
+		Name:  "root",
+		IsDir: true,
 		Children: []*Node{
 			{Name: "file1", Size: 100, IsDir: false},
 			{Name: "file2", Size: 300, IsDir: false},
@@ -95,8 +95,8 @@ func TestTopNFiles(t *testing.T) {
 
 func TestTopNFilesZero(t *testing.T) {
 	root := &Node{
-		Name:     "root",
-		IsDir:    true,
+		Name:  "root",
+		IsDir: true,
 		Children: []*Node{
 			{Name: "file1", Size: 100, IsDir: false},
 			{Name: "file2", Size: 200, IsDir: false},
@@ -119,8 +119,8 @@ func TestTopNFilesNil(t *testing.T) {
 
 func TestTopNFilesLessThanN(t *testing.T) {
 	root := &Node{
-		Name:     "root",
-		IsDir:    true,
+		Name:  "root",
+		IsDir: true,
 		Children: []*Node{
 			{Name: "file1", Size: 100, IsDir: false},
 			{Name: "file2", Size: 200, IsDir: false},

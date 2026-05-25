@@ -1,0 +1,32 @@
+[
+  {
+    "path": "lt-clean-test",
+    "size": 5667922,
+    "mtime": "2026-05-23T18:12:50+08:00",
+    "is_dir": false
+  },
+  {
+    "path": "openclaw-2026-05-25.log",
+    "size": 3140408,
+    "mtime": "2026-05-25T16:55:01+08:00",
+    "is_dir": false
+  },
+  {
+    "path": "openclaw-2026-05-23.log",
+    "size": 3109969,
+    "mtime": "2026-05-25T11:40:43+08:00",
+    "is_dir": false
+  },
+  {
+    "path": "gen_urls2.py",
+    "size": 34551,
+    "mtime": "2026-05-25T10:47:56+08:00",
+    "is_dir": false
+  },
+  {
+    "path": "gen_urls.py",
+    "size": 34439,
+    "mtime": "2026-05-25T10:41:32+08:00",
+    "is_dir": false
+  }
+]

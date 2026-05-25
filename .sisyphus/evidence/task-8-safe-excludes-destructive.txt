@@ -1,0 +1,7 @@
+Scenario: Safe clean still excludes destructive items
+Date: 2026-05-18
+
+Command: go test ./cmd -run 'TestResolveIDs_SafeMode' -v
+Expected: Tests PASS and assert trash, ios_backup, xcode_archives are not selected by safe mode
+
+Result:

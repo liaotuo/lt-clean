@@ -1,0 +1,14 @@
+cleaning 11 items [DRY RUN]:
+  ○ brew                              (dry-run)
+  ○ go_modcache                       (dry-run)
+  ○ pip                               (dry-run)
+  ○ npm                               (dry-run)
+  ○ pnpm                              (dry-run)
+  ○ js_pkg_caches                     (dry-run)
+  ○ typescript                        (dry-run)
+  ○ ios_simulator_unavail             (dry-run)
+  ○ user_logs                         (dry-run)
+  ○ quicklook_cache                   (dry-run)
+  ○ ds_store                          (dry-run)
+
+total freed: 0 B   success: 11   failed: 0

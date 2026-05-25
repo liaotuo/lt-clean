@@ -1,0 +1,7 @@
+Scenario: Merged JS item is in catalog
+Date: 2026-05-18
+
+Command: go test ./internal/catalog -run 'TestBuildHasAllExpectedIDs' -v
+Expected: Exit code 0; js_pkg_caches expected, yarn and bun absent
+
+Result:

@@ -1,0 +1,12 @@
+Run cleaning actions for items selected via --id, --group, or --safe.
+At least one selector is required. Use --dry-run to preview without deleting.
+
+Usage:
+  lt-clean clean [flags]
+
+Flags:
+      --dry-run        preview without deleting
+      --group string   select all items in a group (dev_caches|ide|mobile|system)
+  -h, --help           help for clean
+      --id strings     comma-separated item ids (e.g. brew,go_modcache)
+      --safe           select all Safe-level items

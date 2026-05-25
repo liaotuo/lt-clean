@@ -1,0 +1,114 @@
+# Documentation Contract Update Map
+# Task 4: Identify all doc sections that must change when catalog count changes
+# Generated: 2026-05-18
+# Current count: 46 items → Final count: 36 items (10 items to be removed)
+
+================================================================================
+FILE: README.md
+================================================================================
+
+SECTION 1: Catalog header (line 117)
+  Location: Line 117
+  Current text: "46 items across 4 groups."
+  Action: Update count to match new catalog size
+
+SECTION 2: Catalog table (lines 119-167)
+  Location: Lines 119-167 (full markdown table)
+  Content: 46 rows of catalog items (one row per item)
+  Action: Remove rows for deleted items, keep remaining items
+  Note: Table spans lines 121-166 (actual data rows), header/footer at 119-120, 167-168
+
+SECTION 3: Catalog footer (line 168)
+  Location: Line 168
+  Current text: "46 items total."
+  Action: Update count to match new catalog size
+
+TOTAL REFERENCES IN README.md: 3 locations (header, table rows, footer)
+
+================================================================================
+FILE: AGENTS.md
+================================================================================
+
+SECTION 1: Common commands test example (line 19)
+  Location: Line 19
+  Current text: "go test ./internal/catalog -run TestBuildHas46Items"
+  Action: Update test name reference (test will be renamed in code changes)
+
+SECTION 2: Architecture catalog comment (line 45)
+  Location: Line 45
+  Current text: "catalog/   46 hard-coded Items with Hint/Probe/Action/SafetyLevel"
+  Action: Update count to match new catalog size
+
+SECTION 3: Catalog test guidance (line 64)
+  Location: Line 64
+  Current text: "Three tests pin the catalog: `TestBuildHas46Items`, `TestBuildHasAllExpectedIDs`, and `TestEveryItemHasHint`. **Adding or removing an item requires updating all three.**"
+  Action: Update test name reference (TestBuildHas46Items → TestBuildHas36Items or similar)
+
+TOTAL REFERENCES IN AGENTS.md: 3 locations
+
+================================================================================
+FILE: CLAUDE.md
+================================================================================
+
+SECTION 1: Common commands test example (line 19)
+  Location: Line 19
+  Current text: "go test ./internal/catalog -run TestBuildHas46Items"
+  Action: Update test name reference (test will be renamed in code changes)
+
+SECTION 2: Architecture catalog comment (line 45)
+  Location: Line 45
+  Current text: "catalog/   46 hard-coded Items with Hint/Probe/Action/SafetyLevel"
+  Action: Update count to match new catalog size
+
+SECTION 3: Catalog test guidance (line 64)
+  Location: Line 64
+  Current text: "Three tests pin the catalog: `TestBuildHas46Items`, `TestBuildHasAllExpectedIDs`, and `TestEveryItemHasHint`. **Adding or removing an item requires updating all three.**"
+  Action: Update test name reference (TestBuildHas46Items → TestBuildHas36Items or similar)
+
+TOTAL REFERENCES IN CLAUDE.md: 3 locations (identical to AGENTS.md)
+
+================================================================================
+SUMMARY
+================================================================================
+
+Total files requiring updates: 3 (README.md, AGENTS.md, CLAUDE.md)
+Total "46" references to update: 9
+
+README.md:
+  - Line 117: "46 items across 4 groups" → update count
+  - Lines 119-167: Full catalog table → remove deleted item rows
+  - Line 168: "46 items total" → update count
+
+AGENTS.md:
+  - Line 19: Test name in command example
+  - Line 45: Architecture diagram catalog count
+  - Line 64: Test guidance section with test name
+
+CLAUDE.md:
+  - Line 19: Test name in command example
+  - Line 45: Architecture diagram catalog count
+  - Line 64: Test guidance section with test name
+
+================================================================================
+DEPENDENCY ORDER
+================================================================================
+
+These doc updates MUST happen AFTER:
+  1. Catalog code changes are complete (internal/catalog/catalog.go)
+  2. Test names are updated (internal/catalog/catalog_test.go)
+  3. New item count is verified by passing tests
+
+Do NOT edit docs with speculative counts before catalog implementation is done.
+
+================================================================================
+ITEMS TO BE REMOVED (from plan context)
+================================================================================
+
+The following 10 items will be removed from the catalog:
+  (Items TBD - check plan file for specific IDs to remove)
+
+When updating README.md table, remove rows corresponding to deleted item IDs.
+
+================================================================================
+END OF MAP
+================================================================================

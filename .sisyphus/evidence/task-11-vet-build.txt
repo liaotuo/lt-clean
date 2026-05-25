@@ -1,0 +1,10 @@
+Scenario: Build and vet pass
+Date: 2026-05-18
+
+Commands:
+1. make vet
+2. make build
+
+Expected: Both commands exit 0
+
+Result:

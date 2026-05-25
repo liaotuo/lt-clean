@@ -1,0 +1,7 @@
+Scenario: Merged JS ID clean dry-run works when selected
+Date: 2026-05-18
+
+Command: go run . clean --id js_pkg_caches --dry-run
+Expected: Exit code 0 if item is available
+
+Result:

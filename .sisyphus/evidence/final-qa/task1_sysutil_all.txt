@@ -1,0 +1,5 @@
+=== RUN   TestDiskFreeBytes
+    sysutil_test.go:10: DiskFreeBytes = 25576325120 bytes
+--- PASS: TestDiskFreeBytes (0.00s)
+PASS
+ok  	github.com/liaotuo/lt-clean/internal/sysutil	(cached)

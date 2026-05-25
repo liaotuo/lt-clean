@@ -1,0 +1,8 @@
+Scenario: Removed IDs are not catalog entries
+Date: 2026-05-18
+
+Search for removed IDs in catalog.go: carthage, deno, gem, composer, nuget, sbt, bazel, aws_cli, terraform_plugins, yarn, bun
+
+Expected: No item IDs remain for removed/merged-away entries
+
+Result:

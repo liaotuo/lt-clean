@@ -1,0 +1,7 @@
+Scenario: Removed ID is rejected
+Date: 2026-05-18
+
+Command: go run . clean --id carthage --dry-run
+Expected: Non-zero exit code and output contains "unknown id: carthage"
+
+Result:

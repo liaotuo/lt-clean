@@ -18,9 +18,9 @@ type Node struct {
 
 // Config 定义 find 命令的配置参数。
 type Config struct {
-	Root    string        // 搜索根目录路径
-	MinSize int64         // 最小文件大小过滤（字节）
-	TopN    int           // 返回最大的 N 个结果（0 表示全部）
+	Root    string          // 搜索根目录路径
+	MinSize int64           // 最小文件大小过滤（字节）
+	TopN    int             // 返回最大的 N 个结果（0 表示全部）
 	Context context.Context // 上下文，用于取消和超时控制
 }
 
@@ -34,9 +34,9 @@ type FileEntry struct {
 
 // WalkResult 封装了遍历结果的统计数据。
 type WalkResult struct {
-	FilesScanned int64     // 扫描的文件总数
-	TotalSize    int64     // 扫描路径的总大小（字节）
+	FilesScanned int64         // 扫描的文件总数
+	TotalSize    int64         // 扫描路径的总大小（字节）
 	Elapsed      time.Duration // 遍历耗时
-	Tree         *Node     // 根节点（nil 表示发生错误）
-	Err          error     // 遍历过程中的错误（nil 表示成功）
+	Tree         *Node         // 根节点（nil 表示发生错误）
+	Err          error         // 遍历过程中的错误（nil 表示成功）
 }

@@ -1,0 +1,26 @@
+# Task 2: fastwalk dependency - Evidence
+
+## Completed: 2026-05-25
+
+## Dependency verification
+$ grep "charlievieth/fastwalk" go.mod
+	github.com/charlievieth/fastwalk v1.0.14
+
+## Build verification
+$ CGO_ENABLED=0 go build .
+(success - no output)
+
+## Binary size
+$ make build-small && stat -f%z bin/lt-clean
+3922882 bytes (~3.74 MB)
+
+## Files modified
+- go.mod: added github.com/charlievieth/fastwalk v1.0.14
+- go.sum: updated
+
+## New file
+- internal/finder/walk.go: placeholder with panic("not implemented")
+
+## QA checks passed
+- [x] grep finds charlievieth/fastwalk in go.mod
+- [x] CGO_ENABLED=0 go build . succeeds
