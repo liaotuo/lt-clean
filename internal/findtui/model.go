@@ -26,11 +26,11 @@ type Model struct {
 	height   int
 	sortMode string
 
-	scanCh    <-chan finder.WalkResult
-	scanCtx   context.Context
-	scanCxl   context.CancelFunc
+	scanCh       <-chan finder.WalkResult
+	scanCtx      context.Context
+	scanCxl      context.CancelFunc
 	filesScanned int64
-	elapsed   time.Duration
+	elapsed      time.Duration
 }
 
 // New constructs the initial Model and starts scanning.
@@ -40,10 +40,13 @@ func New(cfg finder.Config) Model {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	ch, _ := finder.Walk(ctx, cfg)
+
 	return Model{
 		state:    stateFindScan,
 		spinner:  sp,
 		sortMode: "size",
+		scanCh:   ch,
 		scanCtx:  ctx,
 		scanCxl:  cancel,
 	}

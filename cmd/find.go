@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/bubbletea"
 	"github.com/liaotuo/lt-clean/internal/finder"
+	"github.com/liaotuo/lt-clean/internal/findtui"
 	"github.com/liaotuo/lt-clean/internal/sysutil"
 	"github.com/spf13/cobra"
 )
 
 var (
 	findMinSize string
-	findJSON   bool
-	findTopN   int
+	findJSON    bool
+	findTopN    int
 )
 
 var findCmd = &cobra.Command{
@@ -76,7 +78,14 @@ var findCmd = &cobra.Command{
 			return nil
 		}
 
-		fmt.Println("TUI not implemented yet")
+		cfg := finder.Config{
+			Root:    path,
+			MinSize: minSize,
+		}
+		p := tea.NewProgram(findtui.New(cfg))
+		if _, err := p.Run(); err != nil {
+			return err
+		}
 		return nil
 	},
 }
