@@ -73,3 +73,43 @@ func collectFiles(node *Node, entries *[]FileEntry) {
 		collectFiles(child, entries)
 	}
 }
+
+func TopNDirs(tree *Node, n int) []FileEntry {
+	if tree == nil || n <= 0 {
+		return nil
+	}
+
+	var allDirs []FileEntry
+	collectDirs(tree, &allDirs)
+
+	for i := 0; i < len(allDirs)-1; i++ {
+		for j := i + 1; j < len(allDirs); j++ {
+			if allDirs[j].Size > allDirs[i].Size {
+				allDirs[i], allDirs[j] = allDirs[j], allDirs[i]
+			}
+		}
+	}
+
+	if len(allDirs) <= n {
+		return allDirs
+	}
+	return allDirs[:n]
+}
+
+func collectDirs(node *Node, entries *[]FileEntry) {
+	if node == nil || !node.IsDir {
+		return
+	}
+
+	for _, child := range node.Children {
+		if child.IsDir {
+			*entries = append(*entries, FileEntry{
+				Path:  child.Name,
+				Size:  child.Size,
+				MTime: child.MTime,
+				IsDir: true,
+			})
+			collectDirs(child, entries)
+		}
+	}
+}

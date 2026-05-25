@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbletea"
 	"github.com/liaotuo/lt-clean/internal/finder"
@@ -16,6 +17,7 @@ var (
 	findMinSize string
 	findJSON    bool
 	findTopN    int
+	findExclude string
 )
 
 var findCmd = &cobra.Command{
@@ -46,11 +48,17 @@ var findCmd = &cobra.Command{
 			}
 		}
 
+		var excludes []string
+		if findExclude != "" {
+			excludes = strings.Split(findExclude, ",")
+		}
+
 		if findJSON || findTopN > 0 {
 			cfg := finder.Config{
 				Root:    path,
 				MinSize: minSize,
 				TopN:    findTopN,
+				Exclude: excludes,
 			}
 			ch, err := finder.Walk(context.Background(), cfg)
 			if err != nil {
@@ -67,7 +75,7 @@ var findCmd = &cobra.Command{
 
 			var topFiles []finder.FileEntry
 			if findTopN > 0 {
-				topFiles = finder.TopNFiles(result.Tree, findTopN)
+				topFiles = finder.TopNDirs(result.Tree, findTopN)
 			}
 
 			output, err := finder.MarshalJSON(topFiles)
@@ -81,6 +89,7 @@ var findCmd = &cobra.Command{
 		cfg := finder.Config{
 			Root:    path,
 			MinSize: minSize,
+			Exclude: excludes,
 		}
 		p := tea.NewProgram(findtui.New(cfg))
 		if _, err := p.Run(); err != nil {
@@ -94,5 +103,6 @@ func init() {
 	findCmd.Flags().StringVar(&findMinSize, "min-size", "", "minimum file size (e.g. 10M, 1G)")
 	findCmd.Flags().BoolVar(&findJSON, "json", false, "emit machine-readable JSON")
 	findCmd.Flags().IntVar(&findTopN, "top", 0, "show top N largest files")
+	findCmd.Flags().StringVar(&findExclude, "exclude", "", "comma-separated directory patterns to skip (e.g. OrbStack,Library/Mobile\\ Documents)")
 	rootCmd.AddCommand(findCmd)
 }

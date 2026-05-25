@@ -3,6 +3,7 @@ package findtui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/dustin/go-humanize"
 )
@@ -115,10 +116,6 @@ func proportionalBar(size, total int64, width int) string {
 	return strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
 }
 
-func formatDuration(d interface{ String() string }) string {
-	s := d.String()
-	if len(s) > 10 {
-		s = s[:10]
-	}
-	return s
+func formatDuration(d time.Duration) string {
+	return d.Round(time.Second).String()
 }
