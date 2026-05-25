@@ -36,14 +36,18 @@ lt-clean scan --json             # JSON 输出
 
 lt-clean clean --id brew,go_modcache    # 清理指定项
 lt-clean clean --safe                   # 清理所有 Safe 级项目
-lt-clean clean --safe --permanent       # 永久删除（不进回收站）
+
+lt-clean find                           # 交互式磁盘分析 TUI（默认）
+lt-clean find --json --top 10           # 输出最大的 10 个文件（JSON）
+lt-clean find --min-size 100M ~         # 查找 home 目录下 >= 100MB 的文件
+lt-clean find /path/to/dir              # 分析指定目录
 ```
 
 ## 特性
 
-- **默认进回收站** — 清理的文件移入 `~/.Trash`，可恢复
 - **三级安全等级** — Safe（可安全清理）、Costly（重建较慢）、Destructive（用户数据，需确认）
 - **可配置排除** — `~/.config/lt-clean/config.json` 排除特定项目
+- **find 命令** — 大文件定位，支持按大小过滤、JSON 输出
 
 ## 目录
 
