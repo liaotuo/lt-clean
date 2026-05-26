@@ -31,6 +31,7 @@ var cleanCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		items = catalog.MergeCustom(items, cfg.Custom)
 
 		ids, err := resolveIDs(items, cleanIDs, cleanGroup, cleanSafe, cfg)
 		if err != nil {

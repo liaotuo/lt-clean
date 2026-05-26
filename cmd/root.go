@@ -23,6 +23,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		items = catalog.MergeCustom(items, cfg.Custom)
 		p := tea.NewProgram(tui.New(items, cfg.Exclude), tea.WithAltScreen())
 		_, err = p.Run()
 		return err

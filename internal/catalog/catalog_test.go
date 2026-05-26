@@ -1,6 +1,10 @@
 package catalog
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/liaotuo/lt-clean/internal/config"
+)
 
 func TestBuildHas36Items(t *testing.T) {
 	items := Build()
@@ -148,5 +152,84 @@ func TestProtectedCatalogItems(t *testing.T) {
 	}
 	if dsStore.Action.Kind != ActDsStoreSweep {
 		t.Errorf("ds_store must use ActDsStoreSweep, got %d", dsStore.Action.Kind)
+	}
+}
+
+func TestMergeCustomEmpty(t *testing.T) {
+	items := Build()
+	originalLen := len(items)
+	merged := MergeCustom(items, nil)
+	if len(merged) != originalLen {
+		t.Errorf("MergeCustom with nil should not change length")
+	}
+	merged = MergeCustom(items, []config.CustomItem{})
+	if len(merged) != originalLen {
+		t.Errorf("MergeCustom with empty slice should not change length")
+	}
+}
+
+func TestMergeCustomAddsItems(t *testing.T) {
+	items := Build()
+	customs := []config.CustomItem{
+		{ID: "my_cache", Path: "~/test", Title: "My Cache"},
+	}
+	merged := MergeCustom(items, customs)
+	if len(merged) != len(items)+1 {
+		t.Fatalf("expected %d items, got %d", len(items)+1, len(merged))
+	}
+	custom := FindByID(merged, "my_cache")
+	if custom == nil {
+		t.Fatal("custom item should exist")
+	}
+	if custom.Group != "custom" {
+		t.Errorf("custom item group = %q, want %q", custom.Group, "custom")
+	}
+	if custom.Level != Safe {
+		t.Errorf("custom item level = %d, want %d", custom.Level, Safe)
+	}
+}
+
+func TestMergeCustomIDCollision(t *testing.T) {
+	items := Build()
+	customs := []config.CustomItem{
+		{ID: "brew", Path: "~/other", Title: "Should be Renamed"},
+	}
+	merged := MergeCustom(items, customs)
+	originalBrew := FindByID(merged, "brew")
+	if originalBrew != nil && originalBrew.Group != "dev_caches" {
+		t.Error("original brew should still exist")
+	}
+	customBrew := FindByID(merged, "custom_brew")
+	if customBrew == nil {
+		t.Error("colliding custom item should be renamed to custom_brew")
+	}
+}
+
+func TestMergeCustomLevel(t *testing.T) {
+	items := Build()
+	customs := []config.CustomItem{
+		{ID: "costly_cache", Path: "~/big", Title: "Big Cache", Level: "costly"},
+		{ID: "safe_cache", Path: "~/small", Title: "Small Cache", Level: "safe"},
+	}
+	merged := MergeCustom(items, customs)
+	costly := FindByID(merged, "costly_cache")
+	if costly.Level != Costly {
+		t.Errorf("costly_cache level = %d, want %d", costly.Level, Costly)
+	}
+	safe := FindByID(merged, "safe_cache")
+	if safe.Level != Safe {
+		t.Errorf("safe_cache level = %d, want %d", safe.Level, Safe)
+	}
+}
+
+func TestMergeCustomDefaultLevelIsSafe(t *testing.T) {
+	items := Build()
+	customs := []config.CustomItem{
+		{ID: "no_level", Path: "~/test", Title: "No Level"},
+	}
+	merged := MergeCustom(items, customs)
+	item := FindByID(merged, "no_level")
+	if item.Level != Safe {
+		t.Errorf("item without level should default to Safe, got %d", item.Level)
 	}
 }

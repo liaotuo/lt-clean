@@ -27,6 +27,7 @@ var scanCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		items = catalog.MergeCustom(items, cfg.Custom)
 
 		available := items[:0:0]
 		for _, it := range items {

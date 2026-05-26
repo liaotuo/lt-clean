@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/liaotuo/lt-clean/internal/config"
 	"github.com/liaotuo/lt-clean/internal/sysutil"
 )
 
@@ -364,4 +365,64 @@ func FindByID(items []Item, id string) *Item {
 		}
 	}
 	return nil
+}
+
+// MergeCustom appends custom items from config to the catalog.
+func MergeCustom(items []Item, customs []config.CustomItem) []Item {
+	existingIDs := make(map[string]bool)
+	for _, item := range items {
+		existingIDs[item.ID] = true
+	}
+
+	for _, c := range customs {
+		id := c.ID
+		if existingIDs[id] {
+			id = "custom_" + id
+		}
+
+		level := parseConfigLevel(config.ParseLevel(c.Level))
+		hint := c.Hint
+		if hint == "" {
+			hint = "自定义清理项：" + c.Path
+		}
+
+		expandedPath := sysutil.ExpandHome(c.Path)
+		probePaths := func(item *Item) bool {
+			for _, p := range item.SizePaths {
+				if _, err := os.Stat(p); err == nil {
+					return true
+				}
+			}
+			return false
+		}
+
+		customItem := Item{
+			ID:    id,
+			Group: "custom",
+			Title: c.Title,
+			Hint:  hint,
+			Level: level,
+			SizePaths: []string{expandedPath},
+			Action: Action{
+				Kind:  ActRmDir,
+				Paths: []string{expandedPath},
+			},
+			Probe: probePaths,
+		}
+		items = append(items, customItem)
+		existingIDs[id] = true
+	}
+
+	return items
+}
+
+func parseConfigLevel(l config.Level) SafetyLevel {
+	switch l {
+	case config.LevelCostly:
+		return Costly
+	case config.LevelDestructive:
+		return Destructive
+	default:
+		return Safe
+	}
 }

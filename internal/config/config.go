@@ -12,9 +12,36 @@ import (
 	"github.com/liaotuo/lt-clean/internal/sysutil"
 )
 
-// Config is the on-disk configuration shape.
+type Level string
+
+const (
+	LevelSafe        Level = "safe"
+	LevelCostly      Level = "costly"
+	LevelDestructive Level = "destructive"
+)
+
+func ParseLevel(s string) Level {
+	switch s {
+	case "costly":
+		return LevelCostly
+	case "destructive":
+		return LevelDestructive
+	default:
+		return LevelSafe
+	}
+}
+
+type CustomItem struct {
+	ID    string `json:"id"`
+	Path  string `json:"path"`
+	Title string `json:"title"`
+	Hint  string `json:"hint,omitempty"`
+	Level string `json:"level,omitempty"`
+}
+
 type Config struct {
-	Exclude []string `json:"exclude"`
+	Exclude []string     `json:"exclude"`
+	Custom  []CustomItem `json:"custom"`
 }
 
 // Path returns the canonical config file path: ~/.config/lt-clean/config.json.
