@@ -116,6 +116,8 @@ func groupOrder(g string) int {
 		return 2
 	case "system":
 		return 3
+	case "custom":
+		return 4
 	}
 	return 99
 }

@@ -95,6 +95,7 @@ func TestAllGroupsAreValid(t *testing.T) {
 		"ide":        true,
 		"mobile":     true,
 		"system":     true,
+		"custom":     true,
 	}
 	for _, it := range Build() {
 		if !validGroups[it.Group] {
