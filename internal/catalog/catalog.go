@@ -397,11 +397,11 @@ func MergeCustom(items []Item, customs []config.CustomItem) []Item {
 		}
 
 		customItem := Item{
-			ID:    id,
-			Group: "custom",
-			Title: c.Title,
-			Hint:  hint,
-			Level: level,
+			ID:        id,
+			Group:     "custom",
+			Title:     c.Title,
+			Hint:      hint,
+			Level:     level,
 			SizePaths: []string{expandedPath},
 			Action: Action{
 				Kind:  ActRmDir,
